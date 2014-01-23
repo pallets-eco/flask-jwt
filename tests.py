@@ -134,4 +134,4 @@ class JWTTestCase(TestCase):
         assert_equals(401, jdata['status_code'])
         assert_equals('Authorization Required', jdata['error'])
         assert_equals('Authorization header was missing', jdata['description'])
-
+        assert_equals('JWT realm="Login Required"', r.headers['WWW-Authenticate'])
