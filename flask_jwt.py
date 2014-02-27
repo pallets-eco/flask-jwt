@@ -155,7 +155,7 @@ class JWT(object):
     def _on_jwt_error(self, e):
         callback = getattr(self, 'error_callback', None)
         if callback:
-            self.callback(e)
+            return self.callback(e)
         else:
             return jsonify({
                 'error': e.message,
