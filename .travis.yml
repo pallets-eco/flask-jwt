@@ -6,7 +6,11 @@ python:
   - "3.3"
   - "pypy"
 
-script: python setup.py test
+install:
+  - pip install . --quiet
+  - pip install pytest pytest-cov pytest-pep8
+
+script: py.test --cov flask_jwt --cov-report term-missing --pep8
 
 branches:
   only:
