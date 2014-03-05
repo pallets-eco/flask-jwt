@@ -103,7 +103,7 @@ def test_jwt_required_decorator_with_valid_token(app, client):
         '/protected',
         headers={'authorization': 'Bearer ' + token})
     assert r.status_code == 200
-    assert r.data == 'success'
+    assert r.data == b'success'
 
 
 def test_jwt_required_decorator_with_invalid_authorization_headers(app, client):
@@ -142,7 +142,7 @@ def test_jwt_required_decorator_with_invalid_jwt_tokens(client):
     assert_error_response(r, 400, 'Invalid JWT', 'Token is undecipherable')
 
     # Expired
-    time.sleep(1)
+    time.sleep(1.5)
     r = client.get('/protected', headers={'authorization': 'Bearer ' + token})
     assert_error_response(r, 400, 'Invalid JWT', 'Token is expired')
 
@@ -173,4 +173,4 @@ def test_custom_error_handler(client, jwt):
         return "custom"
 
     r = client.get('/protected')
-    assert r.data == 'custom'
+    assert r.data == b'custom'

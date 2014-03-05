@@ -142,7 +142,7 @@ class JWT(object):
             self.app = None
 
     def init_app(self, app):
-        for k, v in CONFIG_DEFAULTS.iteritems():
+        for k, v in CONFIG_DEFAULTS.items():
             app.config.setdefault(k, v)
         app.config.setdefault('JWT_SECRET_KEY', app.config['SECRET_KEY'])
 

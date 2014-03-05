@@ -17,7 +17,7 @@ import flask_jwt
 
 class User(object):
     def __init__(self, **kwargs):
-        for k, v in kwargs.iteritems():
+        for k, v in kwargs.items():
             setattr(self, k, v)
 
 
