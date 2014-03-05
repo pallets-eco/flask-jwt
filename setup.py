@@ -50,7 +50,7 @@ setup(
     include_package_data=True,
     platforms='any',
     install_requires=['Flask>=0.10.1', 'PyJWT>=0.1.8'],
-    tests_require=['pytest', 'pytest-cov'],
+    tests_require=['pytest', 'pytest-cov', 'pytest-pep8'],
     cmdclass={'test': PyTest},
     classifiers=[
         'Development Status :: 4 - Beta',
