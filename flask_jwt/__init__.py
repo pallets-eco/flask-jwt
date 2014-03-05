@@ -1,4 +1,12 @@
+# -*- coding: utf-8 -*-
+"""
+    flask_jwt
+    ~~~~~~~~~
 
+    Flask-JWT module
+"""
+
+from collections import OrderedDict
 from datetime import datetime, timedelta
 from functools import wraps
 
@@ -63,8 +71,8 @@ def jwt_required(realm=None):
 
 
 class JWTError(Exception):
-    def __init__(self, message, description, status_code=400, headers=None):
-        self.message = message
+    def __init__(self, error, description, status_code=400, headers=None):
+        self.error = error
         self.description = description
         self.status_code = status_code
         self.headers = headers
@@ -82,7 +90,7 @@ def verify_jwt(realm=None):
     parts = auth.split()
 
     if parts[0].lower() != 'bearer':
-        return None
+        raise JWTError('Invalid JWT header', 'Unsupported authorization type')
     elif len(parts) == 1:
         raise JWTError('Invalid JWT header', 'Token missing')
     elif len(parts) > 2:
@@ -96,7 +104,10 @@ def verify_jwt(realm=None):
     except jwt.DecodeError:
         raise JWTError('Invalid JWT', 'Token is undecipherable')
 
-    _request_ctx_stack.top.current_user = _jwt.user_handler(payload)
+    _request_ctx_stack.top.current_user = user = _jwt.user_callback(payload)
+
+    if user is None:
+        raise JWTError('Invalid JWT', 'User does not exist')
 
 
 class JWTAuthView(MethodView):
@@ -135,10 +146,6 @@ class JWT(object):
             app.config.setdefault(k, v)
         app.config.setdefault('JWT_SECRET_KEY', app.config['SECRET_KEY'])
 
-        if app.config['JWT_SECRET_KEY'] is None:
-            raise RuntimeError('You must specify a SECRET_KEY or '
-                               'JWT_SECRET_KEY configuration option')
-
         url_rule = app.config.get('JWT_AUTH_URL_RULE', None)
         endpoint = app.config.get('JWT_AUTH_ENDPOINT', None)
 
@@ -148,20 +155,19 @@ class JWT(object):
 
         app.errorhandler(JWTError)(self._on_jwt_error)
 
-        if not hasattr(app, 'extensions'):
+        if not hasattr(app, 'extensions'):  # pragma: no cover
             app.extensions = {}
         app.extensions['jwt'] = self
 
     def _on_jwt_error(self, e):
-        callback = getattr(self, 'error_callback', None)
-        if callback:
-            return self.callback(e)
-        else:
-            return jsonify({
-                'error': e.message,
-                'description': e.description,
-                'status_code': e.status_code
-            }), e.status_code, e.headers
+        return getattr(self, 'error_callback', self._error_callback)(e)
+
+    def _error_callback(self, e):
+        return jsonify(OrderedDict([
+            ('status_code', e.status_code),
+            ('error', e.error),
+            ('description', e.description),
+        ])), e.status_code, e.headers
 
     def authentication_handler(self, callback):
         self.authentication_callback = callback

@@ -1,6 +1,7 @@
 *.py[co]
 
 # Packages
+.cache
 *.egg
 *.egg-info
 dist
@@ -23,8 +24,6 @@ pip-log.txt
 #Translations
 *.mo
 
-#Mr Developer
-.mr.developer.cfg
 
 #Virtualenv
 env/

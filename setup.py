@@ -15,7 +15,26 @@ Resources
 
 """
 
+import sys
+
 from setuptools import setup
+from setuptools.command.test import test as TestCommand
+
+
+class PyTest(TestCommand):
+    def finalize_options(self):
+        TestCommand.finalize_options(self)
+        self.test_args = [
+            '--cov', 'flask_jwt',
+            '--cov-report', 'term-missing',
+            '--pep8'
+        ]
+        self.test_suite = True
+
+    def run_tests(self):
+        import pytest
+        errno = pytest.main(self.test_args)
+        sys.exit(errno)
 
 setup(
     name='Flask-JWT',
@@ -26,13 +45,13 @@ setup(
     author_email='matt@nobien.net',
     description='JWT token authentication for Flask apps',
     long_description=__doc__,
-    py_modules=['flask_jwt'],
+    packages=['flask_jwt'],
     zip_safe=False,
     include_package_data=True,
     platforms='any',
     install_requires=['Flask>=0.10.1', 'PyJWT>=0.1.8'],
-    test_suite='nose.collector',
-    tests_require=['nose'],
+    tests_require=['pytest', 'pytest-cov'],
+    cmdclass={'test': PyTest},
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Web Environment',
