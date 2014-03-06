@@ -16,7 +16,7 @@ from flask import current_app, request, jsonify, _request_ctx_stack
 from flask.views import MethodView
 from werkzeug.local import LocalProxy
 
-__version__ = '0.0.1'
+__version__ = '0.1.0'
 
 current_user = LocalProxy(lambda: _request_ctx_stack.top.current_user)
 
