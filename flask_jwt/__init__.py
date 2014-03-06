@@ -16,6 +16,8 @@ from flask import current_app, request, jsonify, _request_ctx_stack
 from flask.views import MethodView
 from werkzeug.local import LocalProxy
 
+__version__ = '0.0.1'
+
 current_user = LocalProxy(lambda: _request_ctx_stack.top.current_user)
 
 _jwt = LocalProxy(lambda: current_app.extensions['jwt'])
@@ -47,8 +49,8 @@ def _default_decode_handler(token):
 
 CONFIG_DEFAULTS = {
     'JWT_DEFAULT_REALM': 'Login Required',
-    'JWT_AUTH_URL_RULE': None,
-    'JWT_AUTH_ENDPOINT': None,
+    'JWT_AUTH_URL_RULE': '/auth',
+    'JWT_AUTH_ENDPOINT': 'jwt',
     'JWT_ENCODE_HANDLER': _default_encode_handler,
     'JWT_DECODE_HANDLER': _default_decode_handler,
     'JWT_PAYLOAD_HANDLER': _default_payload_handler,
@@ -61,6 +63,10 @@ CONFIG_DEFAULTS = {
 
 
 def jwt_required(realm=None):
+    """View decorator that requires a valid JWT token to be present in the request
+
+    :param realm: an optional realm
+    """
     def wrapper(fn):
         @wraps(fn)
         def decorator(*args, **kwargs):
@@ -170,13 +176,44 @@ class JWT(object):
         ])), e.status_code, e.headers
 
     def authentication_handler(self, callback):
+        """Specifies the authentication handler function. This function receives two
+        positional arguments. The first being the username the second being the password.
+        It should return an object representing the authenticated user. Example::
+
+            @jwt.authentication_handler
+            def authenticate(username, password):
+                if username == 'joe' and password == 'pass':
+                    return User(id=1, username='joe')
+
+        :param callback: the authentication handler function
+        """
         self.authentication_callback = callback
         return callback
 
     def user_handler(self, callback):
+        """Specifies the user handler function. This function receives the token payload as
+        it's only positional argument. It should return an object representing the current
+        user. Example::
+
+            @jwt.user_handler
+            def load_user(payload):
+                if payload['user_id'] == 1:
+                    return User(id=1, username='joe')
+
+        :param callback: the user handler function
+        """
         self.user_callback = callback
         return callback
 
     def error_handler(self, callback):
+        """Specifies the error handler function. This function receives a JWTError instance as
+        it's only positional argument. It can optionally return a response. Example::
+
+            @jwt.error_handler
+            def error_handler(e):
+                return "Something bad happened", 400
+
+        :param callback: the error handler function
+        """
         self.error_callback = callback
         return callback
