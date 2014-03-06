@@ -26,7 +26,7 @@ def test_initialize():
     app.config['SECRET_KEY'] = 'super-secret'
     jwt = flask_jwt.JWT(app)
     assert isinstance(jwt, flask_jwt.JWT)
-    assert len(app.url_map._rules) == 1
+    assert len(app.url_map._rules) == 2
 
 
 def test_adds_auth_endpoint():
