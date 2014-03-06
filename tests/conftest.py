@@ -31,8 +31,6 @@ def app(jwt):
     app = Flask(__name__)
     app.debug = True
     app.config['SECRET_KEY'] = 'super-secret'
-    app.config['JWT_AUTH_URL_RULE'] = '/auth'
-    app.config['JWT_AUTH_ENDPOINT'] = 'jwt_auth'
     app.config['JWT_EXPIRATION_DELTA'] = timedelta(milliseconds=200)
 
     jwt.init_app(app)
