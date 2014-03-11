@@ -24,7 +24,7 @@ JWT (JSON Web Tokens) for Flask applications
 Resources
 ---------
 
-- `Documentation <http://packages.python.org/Flask-JWTy/>`_
+- `Documentation <http://packages.python.org/Flask-JWT/>`_
 - `Issue Tracker <http://github.com/mattupstate/flask-jwt/issues>`_
 - `Code <http://github.com/mattupstate/flask-jwt/>`_
 - `Development Version
