@@ -9,7 +9,7 @@ install:
   - pip install . --quiet
   - pip install pytest pytest-cov pytest-pep8 coveralls
 
-script: python setup.py test
+script: coverage run --source=flask_jwt setup.py test
 
 after_script:
   - coveralls
