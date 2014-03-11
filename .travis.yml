@@ -7,7 +7,7 @@ python:
 
 install:
   - pip install . --quiet
-  - pip install pytest pytest-cov pytest-pep8 python-coveralls
+  - pip install pytest pytest-cov pytest-pep8 coveralls
 
 script: python setup.py test
 
