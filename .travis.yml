@@ -7,7 +7,7 @@ python:
 
 install:
   - pip install . --quiet
-  - pip install pytest pytest-cov pytest-pep8 coveralls
+  - pip install pytest pytest-cov pytest-pep8 python-coveralls
 
 script: py.test --cov flask_jwt --cov-report term-missing --pep8
 
