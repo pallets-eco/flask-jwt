@@ -12,7 +12,7 @@ install:
 script: python setup.py test
 
 after_script:
-  - coveralls
+  - coveralls debug
 
 branches:
   only:
