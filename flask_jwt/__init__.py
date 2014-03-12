@@ -119,7 +119,7 @@ def verify_jwt(realm=None):
 class JWTAuthView(MethodView):
 
     def post(self):
-        data = request.get_json()
+        data = request.get_json(force=True)
         username = data.get('username', None)
         password = data.get('password', None)
         criterion = [username, password, len(data) == 2]
