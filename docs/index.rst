@@ -43,9 +43,9 @@ Minimum viable application configuration:
     jwt = JWT(app)
 
     class User(object):
-    def __init__(self, **kwargs):
-        for k, v in kwargs.items():
-            setattr(self, k, v)
+        def __init__(self, **kwargs):
+            for k, v in kwargs.items():
+                setattr(self, k, v)
 
     @jwt.authentication_handler
     def authenticate(username, password):
