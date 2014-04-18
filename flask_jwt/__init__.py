@@ -192,7 +192,7 @@ class JWT(object):
 
     def user_handler(self, callback):
         """Specifies the user handler function. This function receives the token payload as
-        it's only positional argument. It should return an object representing the current
+        its only positional argument. It should return an object representing the current
         user. Example::
 
             @jwt.user_handler
@@ -207,7 +207,7 @@ class JWT(object):
 
     def error_handler(self, callback):
         """Specifies the error handler function. This function receives a JWTError instance as
-        it's only positional argument. It can optionally return a response. Example::
+        its only positional argument. It can optionally return a response. Example::
 
             @jwt.error_handler
             def error_handler(e):
