@@ -106,6 +106,33 @@ def test_jwt_required_decorator_with_valid_token(app, client):
     assert r.data == b'success'
 
 
+def test_jwt_required_decorator_with_valid_request_current_user(app, client):
+    with client as c:
+        r = c.post(
+            '/auth',
+            headers={'content-type': 'application/json'},
+            data=json.dumps({
+                'username': 'joe',
+                'password': 'pass'
+            }))
+
+        jdata = json.loads(r.data)
+        token = jdata['token']
+
+        r = c.get(
+            '/protected',
+            headers={'authorization': 'Bearer ' + token})
+        assert flask_jwt.current_user
+
+
+def test_jwt_required_decorator_with_invalid_request_current_user(app, client):
+    with client as c:
+        r = c.get(
+            '/protected',
+            headers={'authorization': 'Bearer bogus'})
+        assert not flask_jwt.current_user
+
+
 def test_jwt_required_decorator_with_invalid_authorization_headers(app, client):
     # Missing authorization header
     r = client.get('/protected')
