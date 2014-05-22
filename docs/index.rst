@@ -1,5 +1,6 @@
 Flask-JWT
 =========
+.. currentmodule:: flask.ext.jwt
 
 Add basic JWT authentication features to your `Flask`_ application.
 
@@ -93,6 +94,9 @@ This token can then be used to make requests against protected endpoints::
 
     Success!
 
+Within a function decorated by `jwt_required()`, you can use the `current_user`
+proxy to access the user whose token was passed into this request context.
+
 
 Configuration Options
 ---------------------
@@ -128,12 +132,20 @@ Configuration Options
 API
 ---
 
+.. data:: current_user
+
+   A proxy for the current user. It will only be set in the context of function
+   decorated by `jwt_required()` or after you call `verify_jwt()` manually within
+   a view.
+
 .. module:: flask_jwt
 
 .. autoclass:: JWT
    :members: authentication_handler, user_handler, error_handler
 
 .. autofunction:: jwt_required
+
+.. autofunction:: verify_jwt
 
 
 Changelog
