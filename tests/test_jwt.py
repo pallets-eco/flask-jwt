@@ -107,7 +107,6 @@ def test_jwt_required_decorator_with_valid_request_current_user(app, client, use
             {'username': user.username, 'password': user.password}
         )
         token = jdata['token']
-        token = jdata['token']
 
         c.get(
             '/protected',
@@ -237,3 +236,23 @@ def test_custom_encode_handler(client, jwt, user, app):
         app.config['JWT_LEEWAY']
     )
     assert decoded == {'foo': 42}
+
+
+def test_custom_decode_handler(client, user, jwt):
+
+    @jwt.decode_handler
+    def decode_data(data):
+        return {'user_id': user.id}
+
+    with client as c:
+        _, jdata = post_json(
+            client,
+            '/auth',
+            {'username': user.username, 'password': user.password}
+        )
+        token = jdata['token']
+
+        c.get(
+            '/protected',
+            headers={'authorization': 'Bearer ' + token})
+        assert flask_jwt.current_user == user

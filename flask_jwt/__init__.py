@@ -56,7 +56,6 @@ CONFIG_DEFAULTS = {
     'JWT_DEFAULT_REALM': 'Login Required',
     'JWT_AUTH_URL_RULE': '/auth',
     'JWT_AUTH_ENDPOINT': 'jwt',
-    'JWT_DECODE_HANDLER': _default_decode_handler,
     'JWT_PAYLOAD_HANDLER': _default_payload_handler,
     'JWT_ALGORITHM': 'HS256',
     'JWT_VERIFY': True,
@@ -113,7 +112,7 @@ def verify_jwt(realm=None):
         raise JWTError('Invalid JWT header', 'Token contains spaces')
 
     try:
-        handler = current_app.config['JWT_DECODE_HANDLER']
+        handler = _jwt.decode_callback
         payload = handler(parts[1])
     except jwt.ExpiredSignature:
         raise JWTError('Invalid JWT', 'Token is expired')
@@ -160,6 +159,7 @@ class JWT(object):
         # Set default handlers
         self.response_callback = _default_response_handler
         self.encode_callback = _default_encode_handler
+        self.decode_callback = _default_decode_handler
 
     def init_app(self, app):
         for k, v in CONFIG_DEFAULTS.items():
@@ -244,6 +244,17 @@ class JWT(object):
     def encode_handler(self, callback):
         """Specifies the encoding handler function. This function receives a
         payload and signs it.
+
+        :param callable callback: the encoding handler function
         """
         self.encode_callback = callback
+        return callback
+
+    def decode_handler(self, callback):
+        """Specifies the decoding handler function. This function receives a
+        signed payload and decodes it.
+
+        :param callable callback: the decoding handler function
+        """
+        self.decode_callback = callback
         return callback
