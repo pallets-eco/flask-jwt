@@ -5,10 +5,9 @@
 
     Flask-JWT tests
 """
-import os
 import time
 
-from flask import Flask, json
+from flask import Flask, json, jsonify
 
 import flask_jwt
 
@@ -201,3 +200,20 @@ def test_custom_error_handler(client, jwt):
 
     r = client.get('/protected')
     assert r.data == b'custom'
+
+
+def test_custom_response_handler(client, jwt):
+
+    @jwt.response_handler
+    def resp_handler(payload):
+        return jsonify({'mytoken': payload})
+
+    r = client.post(
+        '/auth',
+        headers={'content-type': 'application/json'},
+        data=json.dumps({
+            'username': 'joe',
+            'password': 'pass'
+        }))
+    jdata = json.loads(r.data)
+    assert 'mytoken' in jdata

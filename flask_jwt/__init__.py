@@ -47,6 +47,11 @@ def _default_decode_handler(token):
         current_app.config['JWT_LEEWAY']
     )
 
+
+def _default_response_handler(payload):
+    """Return a Flask response, given an encoded payload."""
+    return jsonify({'token': payload})
+
 CONFIG_DEFAULTS = {
     'JWT_DEFAULT_REALM': 'Login Required',
     'JWT_AUTH_URL_RULE': '/auth',
@@ -139,7 +144,9 @@ class JWTAuthView(MethodView):
             payload_handler = current_app.config['JWT_PAYLOAD_HANDLER']
             payload = payload_handler(user)
             encode_handler = current_app.config['JWT_ENCODE_HANDLER']
-            return jsonify({'token': encode_handler(payload)})
+
+            token = encode_handler(payload)
+            return _jwt.response_callback(token)
         else:
             raise JWTError('Bad Request', 'Invalid credentials')
 
@@ -152,6 +159,8 @@ class JWT(object):
             self.init_app(app)
         else:
             self.app = None
+
+        self.response_callback = _default_response_handler
 
     def init_app(self, app):
         for k, v in CONFIG_DEFAULTS.items():
@@ -222,4 +231,13 @@ class JWT(object):
         :param callback: the error handler function
         """
         self.error_callback = callback
+        return callback
+
+    def response_handler(self, callback):
+        """Specifies the response handler function. this function receives a
+        JWT-encoded payload and returns a Flask response.
+
+        :param callable callback: the response handler function
+        """
+        self.response_callback = callback
         return callback
