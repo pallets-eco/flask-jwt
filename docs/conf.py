@@ -23,7 +23,7 @@ sys.path.append(os.path.abspath('_themes'))
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.intersphinx']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.intersphinx', 'sphinx.ext.viewcode']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -68,7 +68,7 @@ release = version
 exclude_trees = ['_build']
 
 # The reST default role (used for this markup: `text`) to use for all documents.
-#default_role = None
+default_role = 'obj'
 
 # If true, '()' will be appended to :func: etc. cross-reference text.
 #add_function_parentheses = True
@@ -198,3 +198,6 @@ latex_documents = [
 
 # If false, no module index is generated.
 #latex_use_modindex = True
+
+intersphinx_mapping = {'http://docs.python.org/': None,
+                       'http://flask.pocoo.org/docs/': None}
