@@ -12,6 +12,15 @@ from flask import Flask, json, jsonify
 import flask_jwt
 
 
+def post_json(client, url, data):
+    resp = client.post(
+        url,
+        headers={'content-type': 'application/json'},
+        data=json.dumps(data)
+    )
+    return resp, json.loads(resp.data)
+
+
 def assert_error_response(r, code, msg, desc):
     jdata = json.loads(r.data)
     assert r.status_code == code
@@ -38,28 +47,20 @@ def test_adds_auth_endpoint():
     assert '/auth' in rules
 
 
-def test_auth_endpoint_with_valid_request(client):
-    r = client.post(
+def test_auth_endpoint_with_valid_request(client, user):
+    resp, jdata = post_json(
+        client,
         '/auth',
-        headers={'content-type': 'application/json'},
-        data=json.dumps({
-            'username': 'joe',
-            'password': 'pass'
-        }))
-    assert r.status_code == 200
-    assert 'token' in json.loads(r.data)
+        {'username': user.username, 'password': user.password}
+    )
+    assert resp.status_code == 200
+    assert 'token' in jdata
 
 
-def test_auth_endpoint_with_invalid_request(client):
-    # Invalid request
-    r = client.post(
-        '/auth',
-        headers={'content-type': 'application/json'},
-        data=json.dumps({
-            'username': 'joe'
-        }))
-    assert r.status_code == 400
-    jdata = json.loads(r.data)
+def test_auth_endpoint_with_invalid_request(client, user):
+    # Invalid request (no password)
+    resp, jdata = post_json(client, '/auth', {'username': user.username})
+    assert resp.status_code == 400
     assert 'error' in jdata
     assert jdata['error'] == 'Bad Request'
     assert 'description' in jdata
@@ -69,15 +70,12 @@ def test_auth_endpoint_with_invalid_request(client):
 
 
 def test_auth_endpoint_with_invalid_credentials(client):
-    r = client.post(
+    resp, jdata = post_json(
+        client,
         '/auth',
-        headers={'content-type': 'application/json'},
-        data=json.dumps({
-            'username': 'bogus',
-            'password': 'bogus'
-        }))
-    assert r.status_code == 400
-    jdata = json.loads(r.data)
+        {'username': 'bogus', 'password': 'bogus'}
+    )
+    assert resp.status_code == 400
     assert 'error' in jdata
     assert jdata['error'] == 'Bad Request'
     assert 'description' in jdata
@@ -86,39 +84,31 @@ def test_auth_endpoint_with_invalid_credentials(client):
     assert jdata['status_code'] == 400
 
 
-def test_jwt_required_decorator_with_valid_token(app, client):
-    r = client.post(
+def test_jwt_required_decorator_with_valid_token(app, client, user):
+    _, jdata = post_json(
+        client,
         '/auth',
-        headers={'content-type': 'application/json'},
-        data=json.dumps({
-            'username': 'joe',
-            'password': 'pass'
-        }))
-
-    jdata = json.loads(r.data)
+        {'username': user.username, 'password': user.password}
+    )
     token = jdata['token']
-
-    r = client.get(
+    resp = client.get(
         '/protected',
         headers={'authorization': 'Bearer ' + token})
-    assert r.status_code == 200
-    assert r.data == b'success'
+    assert resp.status_code == 200
+    assert resp.data == b'success'
 
 
-def test_jwt_required_decorator_with_valid_request_current_user(app, client):
+def test_jwt_required_decorator_with_valid_request_current_user(app, client, user):
     with client as c:
-        r = c.post(
+        _, jdata = post_json(
+            client,
             '/auth',
-            headers={'content-type': 'application/json'},
-            data=json.dumps({
-                'username': 'joe',
-                'password': 'pass'
-            }))
-
-        jdata = json.loads(r.data)
+            {'username': user.username, 'password': user.password}
+        )
+        token = jdata['token']
         token = jdata['token']
 
-        r = c.get(
+        c.get(
             '/protected',
             headers={'authorization': 'Bearer ' + token})
         assert flask_jwt.current_user
@@ -126,7 +116,7 @@ def test_jwt_required_decorator_with_valid_request_current_user(app, client):
 
 def test_jwt_required_decorator_with_invalid_request_current_user(app, client):
     with client as c:
-        r = c.get(
+        c.get(
             '/protected',
             headers={'authorization': 'Bearer bogus'})
         assert not flask_jwt.current_user
@@ -151,16 +141,12 @@ def test_jwt_required_decorator_with_invalid_authorization_headers(app, client):
     assert_error_response(r, 400, 'Invalid JWT header', 'Token contains spaces')
 
 
-def test_jwt_required_decorator_with_invalid_jwt_tokens(client):
-    r = client.post(
+def test_jwt_required_decorator_with_invalid_jwt_tokens(client, user):
+    _, jdata = post_json(
+        client,
         '/auth',
-        headers={'content-type': 'application/json'},
-        data=json.dumps({
-            'username': 'joe',
-            'password': 'pass'
-        }))
-
-    jdata = json.loads(r.data)
+        {'username': user.username, 'password': user.password}
+    )
     token = jdata['token']
 
     # Undecipherable
@@ -173,16 +159,12 @@ def test_jwt_required_decorator_with_invalid_jwt_tokens(client):
     assert_error_response(r, 400, 'Invalid JWT', 'Token is expired')
 
 
-def test_jwt_required_decorator_with_missing_user(client, jwt):
-    r = client.post(
+def test_jwt_required_decorator_with_missing_user(client, jwt, user):
+    _, jdata = post_json(
+        client,
         '/auth',
-        headers={'content-type': 'application/json'},
-        data=json.dumps({
-            'username': 'joe',
-            'password': 'pass'
-        }))
-
-    jdata = json.loads(r.data)
+        {'username': user.username, 'password': user.password}
+    )
     token = jdata['token']
 
     @jwt.user_handler
@@ -202,18 +184,15 @@ def test_custom_error_handler(client, jwt):
     assert r.data == b'custom'
 
 
-def test_custom_response_handler(client, jwt):
+def test_custom_response_handler(client, jwt, user):
 
     @jwt.response_handler
     def resp_handler(payload):
         return jsonify({'mytoken': payload})
 
-    r = client.post(
+    _, jdata = post_json(
+        client,
         '/auth',
-        headers={'content-type': 'application/json'},
-        data=json.dumps({
-            'username': 'joe',
-            'password': 'pass'
-        }))
-    jdata = json.loads(r.data)
+        {'username': user.username, 'password': user.password}
+    )
     assert 'mytoken' in jdata
