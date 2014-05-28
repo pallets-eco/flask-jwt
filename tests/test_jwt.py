@@ -256,3 +256,29 @@ def test_custom_decode_handler(client, user, jwt):
             '/protected',
             headers={'authorization': 'Bearer ' + token})
         assert flask_jwt.current_user == user
+
+
+def test_custom_payload_handler(client, jwt, user):
+    @jwt.user_handler
+    def load_user(payload):
+        if payload['id'] == user.id:
+            return user
+
+    @jwt.payload_handler
+    def make_payload(u):
+        return {
+            'id': u.id
+        }
+
+    with client as c:
+        _, jdata = post_json(
+            client,
+            '/auth',
+            {'username': user.username, 'password': user.password}
+        )
+        token = jdata['token']
+
+        c.get(
+            '/protected',
+            headers={'authorization': 'Bearer ' + token})
+        assert flask_jwt.current_user == user
