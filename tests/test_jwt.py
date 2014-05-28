@@ -7,6 +7,7 @@
 """
 import time
 
+import jwt as pyjwt
 from flask import Flask, json, jsonify
 
 import flask_jwt
@@ -196,3 +197,43 @@ def test_custom_response_handler(client, jwt, user):
         {'username': user.username, 'password': user.password}
     )
     assert 'mytoken' in jdata
+
+
+def test_default_encode_handler(client, user, app):
+    resp, jdata = post_json(
+        client,
+        '/auth',
+        {'username': user.username, 'password': user.password}
+    )
+    decoded = pyjwt.decode(
+        jdata['token'],
+        app.config['JWT_SECRET_KEY'],
+        app.config['JWT_VERIFY'],
+        app.config['JWT_VERIFY_EXPIRATION'],
+        app.config['JWT_LEEWAY']
+    )
+    assert decoded['user_id'] == user.id
+
+
+def test_custom_encode_handler(client, jwt, user, app):
+
+    @jwt.encode_handler
+    def encode_data(payload):
+        return pyjwt.encode(
+            {'foo': 42},
+            app.config['JWT_SECRET_KEY'],
+            app.config['JWT_ALGORITHM']
+        ).decode('utf-8')
+    _, jdata = post_json(
+        client,
+        '/auth',
+        {'username': user.username, 'password': user.password}
+    )
+    decoded = pyjwt.decode(
+        jdata['token'],
+        app.config['JWT_SECRET_KEY'],
+        app.config['JWT_VERIFY'],
+        app.config['JWT_VERIFY_EXPIRATION'],
+        app.config['JWT_LEEWAY']
+    )
+    assert decoded == {'foo': 42}
