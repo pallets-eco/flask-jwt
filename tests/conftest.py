@@ -27,7 +27,12 @@ def jwt():
 
 
 @pytest.fixture(scope='function')
-def app(jwt):
+def user():
+    return User(id=1, username='joe', password='pass')
+
+
+@pytest.fixture(scope='function')
+def app(jwt, user):
     app = Flask(__name__)
     app.debug = True
     app.config['SECRET_KEY'] = 'super-secret'
@@ -37,14 +42,14 @@ def app(jwt):
 
     @jwt.authentication_handler
     def authenticate(username, password):
-        if username == 'joe' and password == 'pass':
-            return User(id=1, username='joe')
-        None
+        if username == user.username and password == user.password:
+            return user
+        return None
 
     @jwt.user_handler
     def load_user(payload):
-        if payload['user_id'] == 1:
-            return User(id=1, username='joe')
+        if payload['user_id'] == user.id:
+            return user
 
     @app.route('/protected')
     @flask_jwt.jwt_required()
