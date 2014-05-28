@@ -5,7 +5,6 @@
 
     Flask-JWT tests
 """
-import os
 import time
 
 from flask import Flask, json
@@ -77,14 +76,14 @@ def test_auth_endpoint_with_invalid_credentials(client):
             'username': 'bogus',
             'password': 'bogus'
         }))
-    assert r.status_code == 400
+    assert r.status_code == 403
     jdata = json.loads(r.data)
     assert 'error' in jdata
-    assert jdata['error'] == 'Bad Request'
+    assert jdata['error'] == 'Forbidden'
     assert 'description' in jdata
     assert jdata['description'] == 'Invalid credentials'
     assert 'status_code' in jdata
-    assert jdata['status_code'] == 400
+    assert jdata['status_code'] == 403
 
 
 def test_jwt_required_decorator_with_valid_token(app, client):

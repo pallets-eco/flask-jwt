@@ -141,7 +141,7 @@ class JWTAuthView(MethodView):
             encode_handler = current_app.config['JWT_ENCODE_HANDLER']
             return jsonify({'token': encode_handler(payload)})
         else:
-            raise JWTError('Bad Request', 'Invalid credentials')
+            raise JWTError('Forbidden', 'Invalid credentials', status_code=403)
 
 
 class JWT(object):
