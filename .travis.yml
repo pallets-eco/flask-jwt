@@ -11,7 +11,7 @@ install:
 
 script: coverage run --source=flask_jwt setup.py test
 
-after_script:
+after_success:
   - coveralls
 
 branches:
