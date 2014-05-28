@@ -18,7 +18,7 @@ from werkzeug.local import LocalProxy
 
 __version__ = '0.1.0'
 
-current_user = LocalProxy(lambda: _request_ctx_stack.top.current_user)
+current_user = LocalProxy(lambda: getattr(_request_ctx_stack.top, 'current_user', None))
 
 _jwt = LocalProxy(lambda: current_app.extensions['jwt'])
 
