@@ -38,6 +38,10 @@ def _default_encode_handler(payload):
     ).decode('utf-8')
 
 
+def _default_response_handler(token, user=None, request=None):
+    return {'token': token}
+
+
 def _default_decode_handler(token):
     return jwt.decode(
         token,
@@ -54,6 +58,7 @@ CONFIG_DEFAULTS = {
     'JWT_ENCODE_HANDLER': _default_encode_handler,
     'JWT_DECODE_HANDLER': _default_decode_handler,
     'JWT_PAYLOAD_HANDLER': _default_payload_handler,
+    'JWT_RESPONSE_HANDLER': _default_response_handler,
     'JWT_ALGORITHM': 'HS256',
     'JWT_VERIFY': True,
     'JWT_VERIFY_EXPIRATION': True,
@@ -139,7 +144,10 @@ class JWTAuthView(MethodView):
             payload_handler = current_app.config['JWT_PAYLOAD_HANDLER']
             payload = payload_handler(user)
             encode_handler = current_app.config['JWT_ENCODE_HANDLER']
-            return jsonify({'token': encode_handler(payload)})
+            token = encode_handler(payload)
+            response_handler = current_app.config['JWT_RESPONSE_HANDLER']
+            response = response_handler(token, user, data)
+            return jsonify(response)
         else:
             raise JWTError('Bad Request', 'Invalid credentials')
 
