@@ -6,12 +6,12 @@ python:
   - "pypy"
 
 install:
-  - pip install . --quiet
-  - pip install pytest pytest-cov pytest-pep8 coveralls
+  - pip install -r requirements.txt -r requirements-dev.txt -e .
+  - pip install coverage coveralls
 
-script: coverage run --source=flask_jwt setup.py test
+script: py.test --cov flask_jwt --cov-report term-missing --pep8 --flakes
 
-after_success:
+after_script:
   - coveralls
 
 branches:
