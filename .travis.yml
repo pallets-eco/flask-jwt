@@ -6,8 +6,9 @@ python:
   - "pypy"
 
 install:
+  - pip install -r dev-requirements.txt
   - pip install . --quiet
-  - pip install pytest pytest-cov pytest-pep8 coveralls
+  - pip install coveralls
 
 script: coverage run --source=flask_jwt setup.py test
 
