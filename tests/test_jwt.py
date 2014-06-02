@@ -196,3 +196,12 @@ def test_custom_response_handler(client, jwt, user):
         {'username': user.username, 'password': user.password}
     )
     assert 'mytoken' in jdata
+
+def test_auth_endpoint_get_with_valid_token(client):
+    test_secret = '0xDECAFBAD'
+    resp = client.get('/auth?code=%s' % test_secret)
+
+    jdata = json.loads(resp.data)
+
+    assert resp.status_code == 200
+    assert 'token' in jdata

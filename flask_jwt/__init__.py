@@ -150,6 +150,18 @@ class JWTAuthView(MethodView):
         else:
             raise JWTError('Bad Request', 'Invalid credentials')
 
+    def get(self):
+        user = _jwt.authentication_request_callback(request)
+
+        if user:
+            payload_handler = current_app.config['JWT_PAYLOAD_HANDLER']
+            payload = payload_handler(user)
+            encode_handler = current_app.config['JWT_ENCODE_HANDLER']
+
+            token = encode_handler(payload)
+            return _jwt.response_callback(token)
+        else:
+            raise JWTError('Bad Request', 'Invalid credentials')
 
 class JWT(object):
 
@@ -172,7 +184,7 @@ class JWT(object):
 
         if url_rule and endpoint:
             auth_view = JWTAuthView.as_view(app.config['JWT_AUTH_ENDPOINT'])
-            app.add_url_rule(url_rule, methods=['POST'], view_func=auth_view)
+            app.add_url_rule(url_rule, methods=['POST', 'GET'], view_func=auth_view)
 
         app.errorhandler(JWTError)(self._on_jwt_error)
 
@@ -203,6 +215,23 @@ class JWT(object):
         :param callback: the authentication handler function
         """
         self.authentication_callback = callback
+        return callback
+
+    def authentication_request_handler(self, callback):
+        """Specifies the authentication request handler function. This function receives a request handle.
+        It should return an object representing the authenticated user. Example::
+
+            @jwt.authentication_request_handler
+            def authenticate(request):
+                code = request.args.get('code')
+
+                # U could use it for oauth
+                id = somehow_get_id_from_token(code)
+                return user_from_db(id)
+
+        :param callback: the authentication handler function
+        """
+        self.authentication_request_callback = callback
         return callback
 
     def user_handler(self, callback):
