@@ -197,6 +197,7 @@ def test_custom_response_handler(client, jwt, user):
     )
     assert 'mytoken' in jdata
 
+
 def test_authentication_request_handler_with_valid_token(client, jwt, user):
 
     @jwt.authentication_request_handler
