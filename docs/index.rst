@@ -141,7 +141,7 @@ API
 .. module:: flask_jwt
 
 .. autoclass:: JWT
-   :members: authentication_handler, user_handler, error_handler
+   :members: authentication_handler, authentication_request_handler, user_handler, error_handler
 
 .. autofunction:: jwt_required
 
