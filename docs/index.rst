@@ -66,7 +66,16 @@ Minimum viable application configuration:
     if __name__ == '__main__':
         app.run()
 
-To get a token make the reqeust::
+It is also possible to implement an auth handler with custom credentials e.g. api keys::
+
+    @jwt.authentication_request_handler
+    def authenticate(request):
+        key = request.args.get('api_key')
+
+        if key == 'Zmxhc2stand0':
+            return User(id=1, username='joe')
+
+To get a token make the request::
 
     POST /auth
     Content-Type: application/json
@@ -141,7 +150,7 @@ API
 .. module:: flask_jwt
 
 .. autoclass:: JWT
-   :members: authentication_handler, user_handler, error_handler
+   :members: authentication_handler, authentication_request_handler, user_handler, error_handler
 
 .. autofunction:: jwt_required
 

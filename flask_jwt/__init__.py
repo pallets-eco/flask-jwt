@@ -13,7 +13,7 @@ from functools import wraps
 import jwt
 
 from flask import current_app, request, jsonify, _request_ctx_stack
-from flask.views import MethodView
+from flask.views import View
 from werkzeug.local import LocalProxy
 
 __version__ = '0.1.0'
@@ -127,18 +127,21 @@ def verify_jwt(realm=None):
         raise JWTError('Invalid JWT', 'User does not exist')
 
 
-class JWTAuthView(MethodView):
+class JWTAuthView(View):
+    def dispatch_request(self):
+        if hasattr(_jwt, 'authentication_request_callback'):
+            user = _jwt.authentication_request_callback(request)
 
-    def post(self):
-        data = request.get_json(force=True)
-        username = data.get('username', None)
-        password = data.get('password', None)
-        criterion = [username, password, len(data) == 2]
+        elif request.method == 'POST':
+            data = request.get_json(force=True)
+            username = data.get('username', None)
+            password = data.get('password', None)
+            criterion = [username, password, len(data) == 2]
 
-        if not all(criterion):
-            raise JWTError('Bad Request', 'Missing required credentials', status_code=400)
+            if not all(criterion):
+                raise JWTError('Bad Request', 'Missing required credentials', status_code=400)
 
-        user = _jwt.authentication_callback(username=username, password=password)
+            user = _jwt.authentication_callback(username=username, password=password)
 
         if user:
             payload_handler = current_app.config['JWT_PAYLOAD_HANDLER']
@@ -172,7 +175,7 @@ class JWT(object):
 
         if url_rule and endpoint:
             auth_view = JWTAuthView.as_view(app.config['JWT_AUTH_ENDPOINT'])
-            app.add_url_rule(url_rule, methods=['POST'], view_func=auth_view)
+            app.add_url_rule(url_rule, methods=['POST', 'GET'], view_func=auth_view)
 
         app.errorhandler(JWTError)(self._on_jwt_error)
 
@@ -203,6 +206,23 @@ class JWT(object):
         :param callback: the authentication handler function
         """
         self.authentication_callback = callback
+        return callback
+
+    def authentication_request_handler(self, callback):
+        """Specifies the authentication request handler function. This function receives a request handle.
+        It should return an object representing the authenticated user. Example::
+
+            @jwt.authentication_request_handler
+            def authenticate(request):
+                code = request.args.get('code')
+
+                # You could use it for oauth
+                id = somehow_get_id_from_token(code)
+                return user_from_db(id)
+
+        :param callback: the authentication request handler function
+        """
+        self.authentication_request_callback = callback
         return callback
 
     def user_handler(self, callback):
