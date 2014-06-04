@@ -46,13 +46,6 @@ def app(jwt, user):
             return user
         return None
 
-    @jwt.authentication_request_handler
-    def authenticate(request):
-        """ Read in a oauth code and check it against a oauth provider """
-        if request.args.get('code') == "0xDECAFBAD":
-            return user
-        return None
-
     @jwt.user_handler
     def load_user(payload):
         if payload['user_id'] == user.id:
