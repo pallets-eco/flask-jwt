@@ -13,7 +13,7 @@ from functools import wraps
 import jwt
 
 from flask import current_app, request, jsonify, _request_ctx_stack
-from flask.views import MethodView
+from flask.views import View
 from werkzeug.local import LocalProxy
 
 __version__ = '0.1.0'
@@ -127,31 +127,21 @@ def verify_jwt(realm=None):
         raise JWTError('Invalid JWT', 'User does not exist')
 
 
-class JWTAuthView(MethodView):
+class JWTAuthView(View):
+    def dispatch_request(self):
+        if hasattr(_jwt, 'authentication_request_callback'):
+            user = _jwt.authentication_request_callback(request)
 
-    def post(self):
-        data = request.get_json(force=True)
-        username = data.get('username', None)
-        password = data.get('password', None)
-        criterion = [username, password, len(data) == 2]
+        elif request.method == 'POST':
+            data = request.get_json(force=True)
+            username = data.get('username', None)
+            password = data.get('password', None)
+            criterion = [username, password, len(data) == 2]
 
-        if not all(criterion):
-            raise JWTError('Bad Request', 'Missing required credentials', status_code=400)
+            if not all(criterion):
+                raise JWTError('Bad Request', 'Missing required credentials', status_code=400)
 
-        user = _jwt.authentication_callback(username=username, password=password)
-
-        if user:
-            payload_handler = current_app.config['JWT_PAYLOAD_HANDLER']
-            payload = payload_handler(user)
-            encode_handler = current_app.config['JWT_ENCODE_HANDLER']
-
-            token = encode_handler(payload)
-            return _jwt.response_callback(token)
-        else:
-            raise JWTError('Bad Request', 'Invalid credentials')
-
-    def get(self):
-        user = _jwt.authentication_request_callback(request)
+            user = _jwt.authentication_callback(username=username, password=password)
 
         if user:
             payload_handler = current_app.config['JWT_PAYLOAD_HANDLER']
@@ -162,6 +152,7 @@ class JWTAuthView(MethodView):
             return _jwt.response_callback(token)
         else:
             raise JWTError('Bad Request', 'Invalid credentials')
+
 
 class JWT(object):
 
@@ -225,11 +216,11 @@ class JWT(object):
             def authenticate(request):
                 code = request.args.get('code')
 
-                # U could use it for oauth
+                # You could use it for oauth
                 id = somehow_get_id_from_token(code)
                 return user_from_db(id)
 
-        :param callback: the authentication handler function
+        :param callback: the authentication request handler function
         """
         self.authentication_request_callback = callback
         return callback
