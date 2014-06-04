@@ -197,11 +197,42 @@ def test_custom_response_handler(client, jwt, user):
     )
     assert 'mytoken' in jdata
 
-def test_auth_endpoint_get_with_valid_token(client):
-    test_secret = '0xDECAFBAD'
-    resp = client.get('/auth?code=%s' % test_secret)
+def test_authentication_request_handler_with_valid_token(client, jwt, user):
+
+    @jwt.authentication_request_handler
+    def authenticate(request):
+        """ Read in a oauth code and use it with your provider """
+        if request.args.get('code') == "0xDECAFBAD":
+            return user
+        return None
+
+    code = '0xDECAFBAD'
+    resp = client.get('/auth?code=%s' % code)
 
     jdata = json.loads(resp.data)
 
     assert resp.status_code == 200
     assert 'token' in jdata
+
+
+def test_authentication_request_handler_with_invalid_token(client, jwt, user):
+
+    @jwt.authentication_request_handler
+    def authenticate(request):
+        """ Read in a oauth code and use it with your provider """
+        if request.args.get('code') == "0xDECAFBAD":
+            return user
+        return None
+
+    code = '0xDEADBEEF'
+    resp = client.get('/auth?code=%s' % code)
+
+    jdata = json.loads(resp.data)
+
+    assert resp.status_code == 400
+    assert 'error' in jdata
+    assert jdata['error'] == 'Bad Request'
+    assert 'description' in jdata
+    assert jdata['description'] == 'Invalid credentials'
+    assert 'status_code' in jdata
+    assert jdata['status_code'] == 400
