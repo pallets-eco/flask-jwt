@@ -50,7 +50,21 @@ def _default_decode_handler(token):
 
 def _default_response_handler(payload):
     """Return a Flask response, given an encoded payload."""
-    return jsonify({'token': payload})
+    return add_cors_headers(jsonify({'token': payload}))
+
+def add_cors_headers(response):
+    if current_app.config['JWT_CORS_ENABLED']:
+        origins = current_app.config['JWT_CORS_ORIGINS']
+        if origins == '*':
+		    response.headers['Access-Control-Allow-Origin'] = '*'
+		    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+        else:
+            if 'Origin' in request.headers:
+                request_origin = request.headers.get('Origin', '')
+                if request_origin in origins:
+                    response.headers['Access-Control-Allow-Origin'] = request_origin
+                    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    return response
 
 CONFIG_DEFAULTS = {
     'JWT_DEFAULT_REALM': 'Login Required',
@@ -60,7 +74,10 @@ CONFIG_DEFAULTS = {
     'JWT_VERIFY': True,
     'JWT_VERIFY_EXPIRATION': True,
     'JWT_LEEWAY': 0,
-    'JWT_EXPIRATION_DELTA': timedelta(seconds=300)
+    'JWT_EXPIRATION_DELTA': timedelta(seconds=300),
+    'JWT_CORS_ENABLED': False,
+    'JWT_CORS_ORIGINS': '*',
+
 }
 
 
@@ -144,6 +161,12 @@ class JWTAuthView(MethodView):
         else:
             raise JWTError('Bad Request', 'Invalid credentials')
 
+    def options(self):
+        response = current_app.make_default_options_response()
+        return add_cors_headers(response)
+
+    def provide_automatic_options():
+        False
 
 class JWT(object):
 
@@ -170,7 +193,7 @@ class JWT(object):
 
         if url_rule and endpoint:
             auth_view = JWTAuthView.as_view(app.config['JWT_AUTH_ENDPOINT'])
-            app.add_url_rule(url_rule, methods=['POST'], view_func=auth_view)
+            app.add_url_rule(url_rule, view_func=auth_view)
 
         app.errorhandler(JWTError)(self._on_jwt_error)
 
@@ -182,11 +205,11 @@ class JWT(object):
         return getattr(self, 'error_callback', self._error_callback)(e)
 
     def _error_callback(self, e):
-        return jsonify(OrderedDict([
+        return add_cors_headers(jsonify(OrderedDict([
             ('status_code', e.status_code),
             ('error', e.error),
             ('description', e.description),
-        ])), e.status_code, e.headers
+        ]))), e.status_code, e.headers
 
     def authentication_handler(self, callback):
         """Specifies the authentication handler function. This function receives two
