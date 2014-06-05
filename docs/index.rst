@@ -109,14 +109,6 @@ Configuration Options
                           ``/auth``.
 ``JWT_AUTH_ENDPOINT``     The authentication endpoint name. Defaults to
                           ``jwt``.
-``JWT_ENCODE_HANDLER``    The token encoding handler function. Defaults to an
-                          internal function. It is not recommended to change
-                          this value.
-``JWT_DECODE_HANDLER``    The token decoding handler function. Defaults to an
-                          internal function. It is not recommended to change
-                          this value.
-``JWT_PAYLOAD_HANDLER``   The payload handler function. Defaults to an internal
-                          function. It is not recommended to change this value.
 ``JWT_ALGORITHM``         The token algorithm. Defaults to ``HS256``
 ``JWT_VERIFY``            Flag indicating if all tokens should be verified.
                           Defaults to ``True``. It is not recommended to change
@@ -141,7 +133,7 @@ API
 .. module:: flask_jwt
 
 .. autoclass:: JWT
-   :members: authentication_handler, user_handler, error_handler
+   :members: authentication_handler, user_handler, error_handler, payload_handler, encode_handler, decode_handler
 
 .. autofunction:: jwt_required
 

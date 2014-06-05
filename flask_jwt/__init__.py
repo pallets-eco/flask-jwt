@@ -56,9 +56,6 @@ CONFIG_DEFAULTS = {
     'JWT_DEFAULT_REALM': 'Login Required',
     'JWT_AUTH_URL_RULE': '/auth',
     'JWT_AUTH_ENDPOINT': 'jwt',
-    'JWT_ENCODE_HANDLER': _default_encode_handler,
-    'JWT_DECODE_HANDLER': _default_decode_handler,
-    'JWT_PAYLOAD_HANDLER': _default_payload_handler,
     'JWT_ALGORITHM': 'HS256',
     'JWT_VERIFY': True,
     'JWT_VERIFY_EXPIRATION': True,
@@ -114,7 +111,7 @@ def verify_jwt(realm=None):
         raise JWTError('Invalid JWT header', 'Token contains spaces')
 
     try:
-        handler = current_app.config['JWT_DECODE_HANDLER']
+        handler = _jwt.decode_callback
         payload = handler(parts[1])
     except jwt.ExpiredSignature:
         raise JWTError('Invalid JWT', 'Token is expired')
@@ -141,11 +138,8 @@ class JWTAuthView(MethodView):
         user = _jwt.authentication_callback(username=username, password=password)
 
         if user:
-            payload_handler = current_app.config['JWT_PAYLOAD_HANDLER']
-            payload = payload_handler(user)
-            encode_handler = current_app.config['JWT_ENCODE_HANDLER']
-
-            token = encode_handler(payload)
+            payload = _jwt.payload_callback(user)
+            token = _jwt.encode_callback(payload)
             return _jwt.response_callback(token)
         else:
             raise JWTError('Bad Request', 'Invalid credentials')
@@ -160,7 +154,11 @@ class JWT(object):
         else:
             self.app = None
 
+        # Set default handlers
         self.response_callback = _default_response_handler
+        self.encode_callback = _default_encode_handler
+        self.decode_callback = _default_decode_handler
+        self.payload_callback = _default_payload_handler
 
     def init_app(self, app):
         for k, v in CONFIG_DEFAULTS.items():
@@ -234,10 +232,46 @@ class JWT(object):
         return callback
 
     def response_handler(self, callback):
-        """Specifies the response handler function. this function receives a
+        """Specifies the response handler function. This function receives a
         JWT-encoded payload and returns a Flask response.
 
         :param callable callback: the response handler function
         """
         self.response_callback = callback
+        return callback
+
+    def encode_handler(self, callback):
+        """Specifies the encoding handler function. This function receives a
+        payload and signs it.
+
+        :param callable callback: the encoding handler function
+        """
+        self.encode_callback = callback
+        return callback
+
+    def decode_handler(self, callback):
+        """Specifies the decoding handler function. This function receives a
+        signed payload and decodes it.
+
+        :param callable callback: the decoding handler function
+        """
+        self.decode_callback = callback
+        return callback
+
+    def payload_handler(self, callback):
+        """Specifies the payload handler function. This function receives a
+        user object and returns a dictionary payload.
+
+        Example::
+
+            @jwt.payload_handler
+            def make_payload(user):
+                return {
+                    'user_id': user.id,
+                    'exp': datetime.utcnow() + current_app.config['JWT_EXPIRATION_DELTA']
+                }
+
+        :param callable callback: the payload handler function
+        """
+        self.payload_callback = callback
         return callback

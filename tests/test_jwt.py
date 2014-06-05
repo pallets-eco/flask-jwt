@@ -7,6 +7,7 @@
 """
 import time
 
+import jwt as pyjwt
 from flask import Flask, json, jsonify
 
 import flask_jwt
@@ -106,7 +107,6 @@ def test_jwt_required_decorator_with_valid_request_current_user(app, client, use
             {'username': user.username, 'password': user.password}
         )
         token = jdata['token']
-        token = jdata['token']
 
         c.get(
             '/protected',
@@ -196,3 +196,89 @@ def test_custom_response_handler(client, jwt, user):
         {'username': user.username, 'password': user.password}
     )
     assert 'mytoken' in jdata
+
+
+def test_default_encode_handler(client, user, app):
+    resp, jdata = post_json(
+        client,
+        '/auth',
+        {'username': user.username, 'password': user.password}
+    )
+    decoded = pyjwt.decode(
+        jdata['token'],
+        app.config['JWT_SECRET_KEY'],
+        app.config['JWT_VERIFY'],
+        app.config['JWT_VERIFY_EXPIRATION'],
+        app.config['JWT_LEEWAY']
+    )
+    assert decoded['user_id'] == user.id
+
+
+def test_custom_encode_handler(client, jwt, user, app):
+
+    @jwt.encode_handler
+    def encode_data(payload):
+        return pyjwt.encode(
+            {'foo': 42},
+            app.config['JWT_SECRET_KEY'],
+            app.config['JWT_ALGORITHM']
+        ).decode('utf-8')
+    _, jdata = post_json(
+        client,
+        '/auth',
+        {'username': user.username, 'password': user.password}
+    )
+    decoded = pyjwt.decode(
+        jdata['token'],
+        app.config['JWT_SECRET_KEY'],
+        app.config['JWT_VERIFY'],
+        app.config['JWT_VERIFY_EXPIRATION'],
+        app.config['JWT_LEEWAY']
+    )
+    assert decoded == {'foo': 42}
+
+
+def test_custom_decode_handler(client, user, jwt):
+
+    @jwt.decode_handler
+    def decode_data(data):
+        return {'user_id': user.id}
+
+    with client as c:
+        _, jdata = post_json(
+            client,
+            '/auth',
+            {'username': user.username, 'password': user.password}
+        )
+        token = jdata['token']
+
+        c.get(
+            '/protected',
+            headers={'authorization': 'Bearer ' + token})
+        assert flask_jwt.current_user == user
+
+
+def test_custom_payload_handler(client, jwt, user):
+    @jwt.user_handler
+    def load_user(payload):
+        if payload['id'] == user.id:
+            return user
+
+    @jwt.payload_handler
+    def make_payload(u):
+        return {
+            'id': u.id
+        }
+
+    with client as c:
+        _, jdata = post_json(
+            client,
+            '/auth',
+            {'username': user.username, 'password': user.password}
+        )
+        token = jdata['token']
+
+        c.get(
+            '/protected',
+            headers={'authorization': 'Bearer ' + token})
+        assert flask_jwt.current_user == user
