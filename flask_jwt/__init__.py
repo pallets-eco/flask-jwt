@@ -56,6 +56,7 @@ CONFIG_DEFAULTS = {
     'JWT_DEFAULT_REALM': 'Login Required',
     'JWT_AUTH_URL_RULE': '/auth',
     'JWT_AUTH_ENDPOINT': 'jwt',
+    'JWT_AUTH_SUBDOMAIN': None,
     'JWT_ENCODE_HANDLER': _default_encode_handler,
     'JWT_DECODE_HANDLER': _default_decode_handler,
     'JWT_PAYLOAD_HANDLER': _default_payload_handler,
@@ -167,12 +168,12 @@ class JWT(object):
             app.config.setdefault(k, v)
         app.config.setdefault('JWT_SECRET_KEY', app.config['SECRET_KEY'])
 
-        url_rule = app.config.get('JWT_AUTH_URL_RULE', None)
-        endpoint = app.config.get('JWT_AUTH_ENDPOINT', None)
+        url_rule = app.config['JWT_AUTH_URL_RULE']
+        endpoint = app.config['JWT_AUTH_ENDPOINT']
+        domain = app.config['JWT_AUTH_SUBDOMAIN']
 
-        if url_rule and endpoint:
-            auth_view = JWTAuthView.as_view(app.config['JWT_AUTH_ENDPOINT'])
-            app.add_url_rule(url_rule, methods=['POST'], view_func=auth_view)
+        auth_view = JWTAuthView.as_view(endpoint)
+        app.add_url_rule(url_rule, methods=['POST'], view_func=auth_view, subdomain=domain)
 
         app.errorhandler(JWTError)(self._on_jwt_error)
 
