@@ -30,9 +30,10 @@ def _get_serializer():
     expires_in = current_app.config['JWT_EXPIRATION_DELTA']
     if isinstance(expires_in, timedelta):
         expires_in = int(expires_in.total_seconds())
+    expires_in_total = expires_in + current_app.config['JWT_LEEWAY']
     return TimedJSONWebSignatureSerializer(
         secret_key=current_app.config['JWT_SECRET_KEY'],
-        expires_in=expires_in,
+        expires_in=expires_in_total,
         algorithm_name=current_app.config['JWT_ALGORITHM']
     )
 
