@@ -26,6 +26,7 @@ current_user = LocalProxy(lambda: getattr(_request_ctx_stack.top, 'current_user'
 
 _jwt = LocalProxy(lambda: current_app.extensions['jwt'])
 
+
 def _get_serializer():
     expires_in = current_app.config['JWT_EXPIRATION_DELTA']
     if isinstance(expires_in, timedelta):
@@ -37,6 +38,7 @@ def _get_serializer():
         algorithm_name=current_app.config['JWT_ALGORITHM']
     )
 
+
 def _default_payload_handler(user):
     return {
         'user_id': user.id,
@@ -45,7 +47,7 @@ def _default_payload_handler(user):
 
 def _default_encode_handler(payload):
     """Return the encoded payload."""
-    return _get_serializer().dumps(payload)
+    return _get_serializer().dumps(payload).decode('utf-8')
 
 
 def _default_decode_handler(token):

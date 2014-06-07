@@ -221,7 +221,7 @@ def test_custom_encode_handler(client, jwt, user, app):
 
     @jwt.encode_handler
     def encode_data(payload):
-        return serializer.dumps({'foo': 42})
+        return serializer.dumps({'foo': 42}).decode('utf-8')
     _, jdata = post_json(
         client,
         '/auth',
