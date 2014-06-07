@@ -7,10 +7,14 @@
 """
 
 from collections import OrderedDict
-from datetime import datetime, timedelta
+from datetime import timedelta
 from functools import wraps
 
-import jwt
+from itsdangerous import (
+    TimedJSONWebSignatureSerializer,
+    SignatureExpired,
+    BadSignature
+)
 
 from flask import current_app, request, jsonify, _request_ctx_stack
 from flask.views import MethodView
@@ -22,30 +26,35 @@ current_user = LocalProxy(lambda: getattr(_request_ctx_stack.top, 'current_user'
 
 _jwt = LocalProxy(lambda: current_app.extensions['jwt'])
 
+def _get_serializer():
+    expires_in = current_app.config['JWT_EXPIRATION_DELTA']
+    if isinstance(expires_in, timedelta):
+        expires_in = int(expires_in.total_seconds())
+    return TimedJSONWebSignatureSerializer(
+        secret_key=current_app.config['JWT_SECRET_KEY'],
+        expires_in=expires_in,
+        algorithm_name=current_app.config['JWT_ALGORITHM']
+    )
 
 def _default_payload_handler(user):
     return {
         'user_id': user.id,
-        'exp': datetime.utcnow() + current_app.config['JWT_EXPIRATION_DELTA']
     }
 
 
 def _default_encode_handler(payload):
-    return jwt.encode(
-        payload,
-        current_app.config['JWT_SECRET_KEY'],
-        current_app.config['JWT_ALGORITHM']
-    ).decode('utf-8')
+    """Return the encoded payload."""
+    return _get_serializer().dumps(payload)
 
 
 def _default_decode_handler(token):
-    return jwt.decode(
-        token,
-        current_app.config['JWT_SECRET_KEY'],
-        current_app.config['JWT_VERIFY'],
-        current_app.config['JWT_VERIFY_EXPIRATION'],
-        current_app.config['JWT_LEEWAY']
-    )
+    """Return the decoded token."""
+    try:
+        result = _get_serializer().loads(token)
+    except SignatureExpired:
+        if current_app.config['JWT_VERIFY_EXPIRATION']:
+            raise
+    return result
 
 
 def _default_response_handler(payload):
@@ -113,9 +122,9 @@ def verify_jwt(realm=None):
     try:
         handler = _jwt.decode_callback
         payload = handler(parts[1])
-    except jwt.ExpiredSignature:
+    except SignatureExpired:
         raise JWTError('Invalid JWT', 'Token is expired')
-    except jwt.DecodeError:
+    except BadSignature:
         raise JWTError('Invalid JWT', 'Token is undecipherable')
 
     _request_ctx_stack.top.current_user = user = _jwt.user_callback(payload)
