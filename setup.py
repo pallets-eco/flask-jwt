@@ -37,10 +37,11 @@ class PyTest(TestCommand):
     def finalize_options(self):
         TestCommand.finalize_options(self)
         self.test_args = [
-            '--cov=flask_jwt',
-            '--cov-report=term-missing',
-            '--flakes',
+            '-xrs',
+            '--cov', 'flask_jwt',
+            '--cov-report', 'term-missing',
             '--pep8',
+            '--flakes',
             '--clearcache',
             'tests'
         ]
