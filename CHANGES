@@ -3,6 +3,17 @@ Flask-JWT Changelog
 
 Here you can see the full list of changes between each Flask-JWT release.
 
+Version 0.2.0
+-------------
+
+Released June 10th 104
+
+- Fixed an issue where `current_user` was not None
+- Added a response handler hook to be able to adjust auth response(s)
+- Removed the configurable handlers in favor of decorators
+- Removed pyjwt dependency
+
+
 Version 0.1.0
 -------------
 
