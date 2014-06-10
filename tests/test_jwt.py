@@ -7,7 +7,8 @@
 """
 import time
 
-import jwt as pyjwt
+from itsdangerous import TimedJSONWebSignatureSerializer
+
 from flask import Flask, json, jsonify
 
 import flask_jwt
@@ -204,37 +205,29 @@ def test_default_encode_handler(client, user, app):
         '/auth',
         {'username': user.username, 'password': user.password}
     )
-    decoded = pyjwt.decode(
-        jdata['token'],
-        app.config['JWT_SECRET_KEY'],
-        app.config['JWT_VERIFY'],
-        app.config['JWT_VERIFY_EXPIRATION'],
-        app.config['JWT_LEEWAY']
+
+    serializer = TimedJSONWebSignatureSerializer(
+        secret_key=app.config['JWT_SECRET_KEY']
     )
+    decoded = serializer.loads(jdata['token'])
     assert decoded['user_id'] == user.id
 
 
 def test_custom_encode_handler(client, jwt, user, app):
+    serializer = TimedJSONWebSignatureSerializer(
+        app.config['JWT_SECRET_KEY'],
+        algorithm_name=app.config['JWT_ALGORITHM']
+    )
 
     @jwt.encode_handler
     def encode_data(payload):
-        return pyjwt.encode(
-            {'foo': 42},
-            app.config['JWT_SECRET_KEY'],
-            app.config['JWT_ALGORITHM']
-        ).decode('utf-8')
+        return serializer.dumps({'foo': 42}).decode('utf-8')
     _, jdata = post_json(
         client,
         '/auth',
         {'username': user.username, 'password': user.password}
     )
-    decoded = pyjwt.decode(
-        jdata['token'],
-        app.config['JWT_SECRET_KEY'],
-        app.config['JWT_VERIFY'],
-        app.config['JWT_VERIFY_EXPIRATION'],
-        app.config['JWT_LEEWAY']
-    )
+    decoded = serializer.loads(jdata['token'])
     assert decoded == {'foo': 42}
 
 
