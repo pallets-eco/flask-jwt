@@ -135,12 +135,14 @@ def verify_jwt(realm=None):
     if user is None:
         raise JWTError('Invalid JWT', 'User does not exist')
 
+
 def generate_token(user):
     """Generate a token for a user.
     """
     payload = _jwt.payload_callback(user)
     token = _jwt.encode_callback(payload)
     return token
+
 
 class JWTAuthView(MethodView):
 
