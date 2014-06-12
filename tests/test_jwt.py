@@ -275,3 +275,9 @@ def test_custom_payload_handler(client, jwt, user):
             '/protected',
             headers={'authorization': 'Bearer ' + token})
         assert flask_jwt.current_user == user
+
+
+def test_generate_token(user, jwt, app):
+    with app.test_request_context():
+        token = flask_jwt.generate_token(user)
+        assert token == jwt.encode_callback(jwt.payload_callback(user))
