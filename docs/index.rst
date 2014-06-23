@@ -119,6 +119,10 @@ Configuration Options
 ``JWT_LEEWAY``            A token expiration leeway value. Defaults to ``0``.
 ``JWT_EXPIRATION_DELTA``  A timedelta value indicating how long tokens are valid
                           for. Defaults to ``timedelta(seconds=300)``
+``JWT_CORS_ENABLED``      Flag indicating if CORS support should be enabled.
+                          Defaults to ``False``
+``JWT_CORS_ORIGINS``      A list value indicating the origins for CORS support.
+                          Defaults to ``'*'``
 ========================= ======================================================
 
 API
