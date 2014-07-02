@@ -66,7 +66,7 @@ Minimum viable application configuration:
     if __name__ == '__main__':
         app.run()
 
-To get a token make the reqeust::
+To get a token make the request::
 
     POST /auth
     Content-Type: application/json
