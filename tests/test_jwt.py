@@ -157,7 +157,7 @@ def test_jwt_required_decorator_with_invalid_jwt_tokens(client, user):
     # Expired
     time.sleep(1.5)
     r = client.get('/protected', headers={'authorization': 'Bearer ' + token})
-    assert_error_response(r, 400, 'Invalid JWT', 'Token is expired')
+    assert_error_response(r, 401, 'Expired JWT', 'Token is expired')
 
 
 def test_jwt_required_decorator_with_missing_user(client, jwt, user):

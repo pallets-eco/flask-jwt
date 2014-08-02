@@ -126,7 +126,9 @@ def verify_jwt(realm=None):
         handler = _jwt.decode_callback
         payload = handler(parts[1])
     except SignatureExpired:
-        raise JWTError('Invalid JWT', 'Token is expired')
+        raise JWTError('Expired JWT', 'Token is expired', 401, {
+            "WWW-Authenticate": 'JWT realm="{0}"'.format(realm)
+        })
     except BadSignature:
         raise JWTError('Invalid JWT', 'Token is undecipherable')
 
