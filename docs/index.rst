@@ -103,23 +103,26 @@ Configuration Options
 
 .. tabularcolumns:: |p{6.5cm}|p{8.5cm}|
 
-========================= ======================================================
-``JWT_DEFAULT_REALM``     The default realm. Defaults to ``Login Required``
-``JWT_AUTH_URL_RULE``     The authentication endpoint URL. Defaults to
-                          ``/auth``.
-``JWT_AUTH_ENDPOINT``     The authentication endpoint name. Defaults to
-                          ``jwt``.
-``JWT_ALGORITHM``         The token algorithm. Defaults to ``HS256``
-``JWT_VERIFY``            Flag indicating if all tokens should be verified.
-                          Defaults to ``True``. It is not recommended to change
-                          this value.
-``JWT_VERIFY_EXPIRATION`` Flag indicating if all tokens should verify their
-                          expiration time. Defaults to ``True``. It is not
-                          recommended to change this value.
-``JWT_LEEWAY``            A token expiration leeway value. Defaults to ``0``.
-``JWT_EXPIRATION_DELTA``  A timedelta value indicating how long tokens are valid
-                          for. Defaults to ``timedelta(seconds=300)``
-========================= ======================================================
+=========================  ======================================================
+``JWT_DEFAULT_REALM``      The default realm. Defaults to ``Login Required``
+``JWT_AUTH_URL_RULE``      The authentication endpoint URL. Defaults to
+                           ``/auth``.
+``JWT_AUTH_ENDPOINT``      The authentication endpoint name. Defaults to
+                           ``jwt``.
+``JWT_ALGORITHM``          The token algorithm. Defaults to ``HS256``
+``JWT_VERIFY``             Flag indicating if all tokens should be verified.
+                           Defaults to ``True``. It is not recommended to change
+                           this value.
+``JWT_VERIFY_EXPIRATION``  Flag indicating if all tokens should verify their
+                           expiration time. Defaults to ``True``. It is not
+                           recommended to change this value.
+``JWT_LEEWAY``             A token expiration leeway value. Defaults to ``0``.
+``JWT_EXPIRATION_DELTA``   A timedelta value indicating how long tokens are valid
+                           for. Defaults to ``timedelta(seconds=300)``
+``JWT_AUTH_HEADER_PREFIX`` The Authorization header value prefix. Defaults to
+                           ``JWT`` as to not conflict with OAuth2 Bearer
+                           tokens.
+========================== ======================================================
 
 API
 ---

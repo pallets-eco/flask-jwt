@@ -95,7 +95,7 @@ def test_jwt_required_decorator_with_valid_token(app, client, user):
     token = jdata['token']
     resp = client.get(
         '/protected',
-        headers={'authorization': 'Bearer ' + token})
+        headers={'authorization': 'JWT ' + token})
     assert resp.status_code == 200
     assert resp.data == b'success'
 
@@ -111,7 +111,7 @@ def test_jwt_required_decorator_with_valid_request_current_user(app, client, use
 
         c.get(
             '/protected',
-            headers={'authorization': 'Bearer ' + token})
+            headers={'authorization': 'JWT ' + token})
         assert flask_jwt.current_user
 
 
@@ -119,7 +119,7 @@ def test_jwt_required_decorator_with_invalid_request_current_user(app, client):
     with client as c:
         c.get(
             '/protected',
-            headers={'authorization': 'Bearer bogus'})
+            headers={'authorization': 'JWT bogus'})
         assert not flask_jwt.current_user
 
 
@@ -129,16 +129,16 @@ def test_jwt_required_decorator_with_invalid_authorization_headers(app, client):
     assert_error_response(r, 401, 'Authorization Required', 'Authorization header was missing')
     assert r.headers['WWW-Authenticate'] == 'JWT realm="Login Required"'
 
-    # Not a bearer token
+    # Not a JWT auth header prefix
     r = client.get('/protected', headers={'authorization': 'Bogus xxx'})
     assert_error_response(r, 400, 'Invalid JWT header', 'Unsupported authorization type')
 
     # Missing token
-    r = client.get('/protected', headers={'authorization': 'Bearer'})
+    r = client.get('/protected', headers={'authorization': 'JWT'})
     assert_error_response(r, 400, 'Invalid JWT header', 'Token missing')
 
     # Token with spaces
-    r = client.get('/protected', headers={'authorization': 'Bearer xxx xxx'})
+    r = client.get('/protected', headers={'authorization': 'JWT xxx xxx'})
     assert_error_response(r, 400, 'Invalid JWT header', 'Token contains spaces')
 
 
@@ -151,12 +151,12 @@ def test_jwt_required_decorator_with_invalid_jwt_tokens(client, user):
     token = jdata['token']
 
     # Undecipherable
-    r = client.get('/protected', headers={'authorization': 'Bearer %sX' % token})
+    r = client.get('/protected', headers={'authorization': 'JWT %sX' % token})
     assert_error_response(r, 400, 'Invalid JWT', 'Token is undecipherable')
 
     # Expired
     time.sleep(1.5)
-    r = client.get('/protected', headers={'authorization': 'Bearer ' + token})
+    r = client.get('/protected', headers={'authorization': 'JWT ' + token})
     assert_error_response(r, 400, 'Invalid JWT', 'Token is expired')
 
 
@@ -172,7 +172,7 @@ def test_jwt_required_decorator_with_missing_user(client, jwt, user):
     def load_user(payload):
         return None
 
-    r = client.get('/protected', headers={'authorization': 'Bearer %s' % token})
+    r = client.get('/protected', headers={'authorization': 'JWT %s' % token})
     assert_error_response(r, 400, 'Invalid JWT', 'User does not exist')
 
 
@@ -247,7 +247,7 @@ def test_custom_decode_handler(client, user, jwt):
 
         c.get(
             '/protected',
-            headers={'authorization': 'Bearer ' + token})
+            headers={'authorization': 'JWT ' + token})
         assert flask_jwt.current_user == user
 
 
@@ -273,7 +273,7 @@ def test_custom_payload_handler(client, jwt, user):
 
         c.get(
             '/protected',
-            headers={'authorization': 'Bearer ' + token})
+            headers={'authorization': 'JWT ' + token})
         assert flask_jwt.current_user == user
 
 
@@ -281,3 +281,24 @@ def test_generate_token(user, jwt, app):
     with app.test_request_context():
         token = flask_jwt.generate_token(user)
         assert token == jwt.encode_callback(jwt.payload_callback(user))
+
+
+def test_custom_auth_header(app, client, user):
+    app.config['JWT_AUTH_HEADER_PREFIX'] = 'Bearer'
+
+    with client as c:
+        resp, jdata = post_json(
+            client,
+            '/auth',
+            {'username': user.username, 'password': user.password}
+        )
+        token = jdata['token']
+
+        # Custom Bearer auth header prefix
+        resp = c.get('/protected', headers={'authorization': 'Bearer ' + token})
+        assert resp.status_code == 200
+        assert resp.data == b'success'
+
+        # Not custom Bearer auth header prefix
+        resp = c.get('/protected', headers={'authorization': 'JWT ' + token})
+        assert_error_response(resp, 400, 'Invalid JWT header', 'Unsupported authorization type')
