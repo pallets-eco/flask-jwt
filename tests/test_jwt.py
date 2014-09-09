@@ -6,6 +6,7 @@
     Flask-JWT tests
 """
 import time
+from datetime import timedelta
 
 from itsdangerous import TimedJSONWebSignatureSerializer
 
@@ -142,7 +143,9 @@ def test_jwt_required_decorator_with_invalid_authorization_headers(app, client):
     assert_error_response(r, 400, 'Invalid JWT header', 'Token contains spaces')
 
 
-def test_jwt_required_decorator_with_invalid_jwt_tokens(client, user):
+def test_jwt_required_decorator_with_invalid_jwt_tokens(client, user, app):
+    app.config['JWT_EXPIRATION_DELTA'] = timedelta(milliseconds=200)
+
     resp, jdata = post_json(
         client,
         '/auth',

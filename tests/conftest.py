@@ -6,8 +6,6 @@
     Test fixtures and what not
 """
 
-from datetime import timedelta
-
 import pytest
 
 from flask import Flask
@@ -36,7 +34,6 @@ def app(jwt, user):
     app = Flask(__name__)
     app.debug = True
     app.config['SECRET_KEY'] = 'super-secret'
-    app.config['JWT_EXPIRATION_DELTA'] = timedelta(milliseconds=200)
 
     jwt.init_app(app)
 
