@@ -87,7 +87,7 @@ def test_auth_endpoint_with_invalid_credentials(client):
 
 
 def test_jwt_required_decorator_with_valid_token(app, client, user):
-    _, jdata = post_json(
+    resp, jdata = post_json(
         client,
         '/auth',
         {'username': user.username, 'password': user.password}
@@ -102,7 +102,7 @@ def test_jwt_required_decorator_with_valid_token(app, client, user):
 
 def test_jwt_required_decorator_with_valid_request_current_user(app, client, user):
     with client as c:
-        _, jdata = post_json(
+        resp, jdata = post_json(
             client,
             '/auth',
             {'username': user.username, 'password': user.password}
@@ -143,7 +143,7 @@ def test_jwt_required_decorator_with_invalid_authorization_headers(app, client):
 
 
 def test_jwt_required_decorator_with_invalid_jwt_tokens(client, user):
-    _, jdata = post_json(
+    resp, jdata = post_json(
         client,
         '/auth',
         {'username': user.username, 'password': user.password}
@@ -161,7 +161,7 @@ def test_jwt_required_decorator_with_invalid_jwt_tokens(client, user):
 
 
 def test_jwt_required_decorator_with_missing_user(client, jwt, user):
-    _, jdata = post_json(
+    resp, jdata = post_json(
         client,
         '/auth',
         {'username': user.username, 'password': user.password}
@@ -191,7 +191,7 @@ def test_custom_response_handler(client, jwt, user):
     def resp_handler(payload):
         return jsonify({'mytoken': payload})
 
-    _, jdata = post_json(
+    resp, jdata = post_json(
         client,
         '/auth',
         {'username': user.username, 'password': user.password}
@@ -222,7 +222,7 @@ def test_custom_encode_handler(client, jwt, user, app):
     @jwt.encode_handler
     def encode_data(payload):
         return serializer.dumps({'foo': 42}).decode('utf-8')
-    _, jdata = post_json(
+    resp, jdata = post_json(
         client,
         '/auth',
         {'username': user.username, 'password': user.password}
@@ -238,7 +238,7 @@ def test_custom_decode_handler(client, user, jwt):
         return {'user_id': user.id}
 
     with client as c:
-        _, jdata = post_json(
+        resp, jdata = post_json(
             client,
             '/auth',
             {'username': user.username, 'password': user.password}
@@ -264,7 +264,7 @@ def test_custom_payload_handler(client, jwt, user):
         }
 
     with client as c:
-        _, jdata = post_json(
+        resp, jdata = post_json(
             client,
             '/auth',
             {'username': user.username, 'password': user.password}
