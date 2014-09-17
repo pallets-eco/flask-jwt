@@ -72,7 +72,8 @@ CONFIG_DEFAULTS = {
     'JWT_VERIFY': True,
     'JWT_VERIFY_EXPIRATION': True,
     'JWT_LEEWAY': 0,
-    'JWT_EXPIRATION_DELTA': timedelta(seconds=300)
+    'JWT_EXPIRATION_DELTA': timedelta(seconds=300),
+    'JWT_AUTH_HEADER_PREFIX': 'JWT',
 }
 
 
@@ -107,6 +108,7 @@ def verify_jwt(realm=None):
     """
     realm = realm or current_app.config['JWT_DEFAULT_REALM']
     auth = request.headers.get('Authorization', None)
+    auth_header_prefix = current_app.config['JWT_AUTH_HEADER_PREFIX']
 
     if auth is None:
         raise JWTError('Authorization Required', 'Authorization header was missing', 401, {
@@ -115,7 +117,7 @@ def verify_jwt(realm=None):
 
     parts = auth.split()
 
-    if parts[0].lower() != 'bearer':
+    if parts[0].lower() != auth_header_prefix.lower():
         raise JWTError('Invalid JWT header', 'Unsupported authorization type')
     elif len(parts) == 1:
         raise JWTError('Invalid JWT header', 'Token missing')
@@ -188,7 +190,7 @@ class JWT(object):
         endpoint = app.config.get('JWT_AUTH_ENDPOINT', None)
 
         if url_rule and endpoint:
-            auth_view = JWTAuthView.as_view(app.config['JWT_AUTH_ENDPOINT'])
+            auth_view = JWTAuthView.as_view(endpoint)
             app.add_url_rule(url_rule, methods=['POST'], view_func=auth_view)
 
         app.errorhandler(JWTError)(self._on_jwt_error)
