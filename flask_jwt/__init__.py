@@ -249,7 +249,6 @@ class JWT(object):
         self.payload_authentication_callback = callback
         return callback
 
-
     def user_handler(self, callback):
         """Specifies the user handler function. This function receives the token payload as
         its only positional argument. It should return an object representing the current
