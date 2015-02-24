@@ -305,3 +305,36 @@ def test_custom_auth_header(app, client, user):
         # Not custom Bearer auth header prefix
         resp = c.get('/protected', headers={'authorization': 'JWT ' + token})
         assert_error_response(resp, 400, 'Invalid JWT header', 'Unsupported authorization type')
+
+
+def test_custom_payload_auth_handler(user, client, jwt):
+
+    @jwt.payload_authentication_handler
+    def payload_auth_handler(payload):
+        username = payload.get('user', None)
+        pwd = payload.get('pwd', None)
+
+        if user.username == username and user.password == pwd:
+            return user
+
+    # With working details
+    resp, jdata = post_json(
+        client,
+        '/auth',
+        {'user': user.username, 'pwd': user.password}
+    )
+    assert 'token' in jdata
+
+    # With missing details
+    resp, jdata = post_json(
+        client,
+        '/auth',
+        {'user': user.username}
+    )
+    assert resp.status_code == 400
+    assert 'error' in jdata
+    assert jdata['error'] == 'Bad Request'
+    assert 'description' in jdata
+    assert jdata['description'] == 'Invalid credentials'
+    assert 'status_code' in jdata
+    assert jdata['status_code'] == 400
