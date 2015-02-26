@@ -64,6 +64,20 @@ def _default_response_handler(payload):
     """Return a Flask response, given an encoded payload."""
     return jsonify({'token': payload})
 
+
+def _default_payload_auth_handler(request):
+    data = request.get_json(force=True)
+    username = data.get('username', None)
+    password = data.get('password', None)
+    criterion = [username, password, len(data) == 2]
+
+    if not all(criterion):
+        raise JWTError('Bad Request', 'Missing required credentials', status_code=400)
+
+    user = _jwt.authentication_callback(username=username, password=password)
+
+    return user
+
 CONFIG_DEFAULTS = {
     'JWT_DEFAULT_REALM': 'Login Required',
     'JWT_AUTH_URL_RULE': '/auth',
@@ -151,16 +165,8 @@ def generate_token(user):
 class JWTAuthView(MethodView):
 
     def post(self):
-        data = request.get_json(force=True)
-        username = data.get('username', None)
-        password = data.get('password', None)
-        criterion = [username, password, len(data) == 2]
 
-        if not all(criterion):
-            raise JWTError('Bad Request', 'Missing required credentials', status_code=400)
-
-        user = _jwt.authentication_callback(username=username, password=password)
-
+        user = _jwt.payload_authentication_callback(request)
         if user:
             token = generate_token(user)
             return _jwt.response_callback(token)
@@ -182,6 +188,7 @@ class JWT(object):
         self.encode_callback = _default_encode_handler
         self.decode_callback = _default_decode_handler
         self.payload_callback = _default_payload_handler
+        self.payload_authentication_callback = _default_payload_auth_handler
 
     def init_app(self, app):
         for k, v in CONFIG_DEFAULTS.items():
@@ -224,6 +231,21 @@ class JWT(object):
         :param callback: the authentication handler function
         """
         self.authentication_callback = callback
+        return callback
+
+    def payload_authentication_handler(self, callback):
+        """Specifies a custom authentication handler. This function receives the
+        json payload as argument.
+         It should return an object representing the authenticated user. Example::
+
+            @jwt.payload_authentication_handler
+            def authenticate(payload):
+                if payload['user'] == 'joe' and payload['pass'] == 'pass':
+                    return User(id=1, username='joe')
+
+        :param callback: the authentication handler function
+        """
+        self.payload_authentication_callback = callback
         return callback
 
     def user_handler(self, callback):
