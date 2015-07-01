@@ -94,7 +94,7 @@ def jwt_required(realm=None):
 
 
 class JWTError(Exception):
-    def __init__(self, error, description, status_code=400, headers=None):
+    def __init__(self, error, description, status_code=401, headers=None):
         self.error = error
         self.description = description
         self.status_code = status_code
