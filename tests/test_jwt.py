@@ -60,6 +60,18 @@ def test_auth_endpoint_with_valid_request(client, user):
     assert 'token' in jdata
 
 
+def test_custom_auth_endpoint_with_valid_request(app, client, user):
+    app.config['JWT_AUTH_USERNAME_KEY'] = 'email'
+    app.config['JWT_AUTH_PASSWORD_KEY'] = 'pass'
+    resp, jdata = post_json(
+        client,
+        '/auth',
+        {'email': user.username, 'pass': user.password}
+    )
+    assert resp.status_code == 200
+    assert 'token' in jdata
+
+
 def test_auth_endpoint_with_invalid_request(client, user):
     # Invalid request (no password)
     resp, jdata = post_json(client, '/auth', {'username': user.username})

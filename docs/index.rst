@@ -109,6 +109,10 @@ Configuration Options
                            ``/auth``.
 ``JWT_AUTH_ENDPOINT``      The authentication endpoint name. Defaults to
                            ``jwt``.
+``JWT_AUTH_USERNAME_KEY``  The username key in the authentication request payload.
+                           Defaults to ``username``.
+``JWT_AUTH_PASSWORD_KEY``  The password key in the authentication request payload.
+                           Defaults to ``password``.
 ``JWT_ALGORITHM``          The token algorithm. Defaults to ``HS256``
 ``JWT_VERIFY``             Flag indicating if all tokens should be verified.
                            Defaults to ``True``. It is not recommended to change

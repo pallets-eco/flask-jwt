@@ -68,6 +68,8 @@ CONFIG_DEFAULTS = {
     'JWT_DEFAULT_REALM': 'Login Required',
     'JWT_AUTH_URL_RULE': '/auth',
     'JWT_AUTH_ENDPOINT': 'jwt',
+    'JWT_AUTH_USERNAME_KEY': 'username',
+    'JWT_AUTH_PASSWORD_KEY': 'password',
     'JWT_ALGORITHM': 'HS256',
     'JWT_VERIFY': True,
     'JWT_VERIFY_EXPIRATION': True,
@@ -152,14 +154,14 @@ class JWTAuthView(MethodView):
 
     def post(self):
         data = request.get_json(force=True)
-        username = data.get('username', None)
-        password = data.get('password', None)
+        username = data.get(current_app.config.get('JWT_AUTH_USERNAME_KEY'), None)
+        password = data.get(current_app.config.get('JWT_AUTH_PASSWORD_KEY'), None)
         criterion = [username, password, len(data) == 2]
 
         if not all(criterion):
             raise JWTError('Bad Request', 'Missing required credentials', status_code=400)
 
-        user = _jwt.authentication_callback(username=username, password=password)
+        user = _jwt.authentication_callback(username, password)
 
         if user:
             token = generate_token(user)
