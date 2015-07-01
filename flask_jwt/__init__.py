@@ -165,7 +165,7 @@ class JWTAuthView(MethodView):
 
         if user:
             token = generate_token(user)
-            return _jwt.response_callback(token)
+            return _jwt.response_callback(token, user)
         else:
             raise JWTError('Bad Request', 'Invalid credentials')
 
