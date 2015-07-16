@@ -59,7 +59,19 @@ def _default_jwt_encode_handler(identity):
 def _default_jwt_decode_handler(token):
     secret = current_app.config['JWT_SECRET_KEY']
     algorithm = current_app.config['JWT_ALGORITHM']
-    return jwt.decode(token, secret, algorithms=[algorithm])
+
+    verify_claims = current_app.config['JWT_VERIFY_CLAIMS']
+    required_claims = current_app.config['JWT_REQUIRED_CLAIMS']
+
+    options = {
+        'verify_' + claim: True
+        for claim in verify_claims
+    }.update({
+        'require_' + claim: True
+        for claim in required_claims
+    })
+
+    return jwt.decode(token, secret, options=options, algorithms=[algorithm])
 
 
 def _default_request_handler():
