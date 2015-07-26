@@ -11,6 +11,7 @@ from datetime import timedelta
 from functools import wraps
 
 from itsdangerous import (
+    JSONWebSignatureSerializer,
     TimedJSONWebSignatureSerializer,
     SignatureExpired,
     BadSignature
@@ -28,6 +29,13 @@ _jwt = LocalProxy(lambda: current_app.extensions['jwt'])
 
 
 def _get_serializer():
+
+    if not current_app.config['JWT_VERIFY_EXPIRATION']:
+        return JSONWebSignatureSerializer(
+            secret_key=current_app.config['JWT_SECRET_KEY'],
+            algorithm_name=current_app.config['JWT_ALGORITHM']
+        )
+
     expires_in = current_app.config['JWT_EXPIRATION_DELTA']
     if isinstance(expires_in, timedelta):
         expires_in = int(expires_in.total_seconds())
@@ -52,12 +60,7 @@ def _default_encode_handler(payload):
 
 def _default_decode_handler(token):
     """Return the decoded token."""
-    try:
-        result = _get_serializer().loads(token)
-    except SignatureExpired:
-        if current_app.config['JWT_VERIFY_EXPIRATION']:
-            raise
-    return result
+    return _get_serializer().loads(token)
 
 
 def _default_response_handler(payload):
