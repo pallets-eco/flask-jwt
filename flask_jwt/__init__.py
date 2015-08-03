@@ -66,7 +66,9 @@ def _default_jwt_decode_handler(token):
     options = {
         'verify_' + claim: True
         for claim in verify_claims
-    }.update({
+    }
+
+    options.update({
         'require_' + claim: True
         for claim in required_claims
     })
