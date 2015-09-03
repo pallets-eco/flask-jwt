@@ -34,7 +34,7 @@ def _get_serializer():
                 expires_in = int(expires_in.total_seconds())
         except AttributeError:
                 expires_in = int((expires_in.microseconds + 0.0 +
-                                 (expires_in.seconds + expires_in.days * 24 * 3600) * 10 ** 6) / 
+                                 (expires_in.seconds + expires_in.days * 24 * 3600) * 10 ** 6) /
                                  10 ** 6)
 
     expires_in_total = expires_in + current_app.config['JWT_LEEWAY']
