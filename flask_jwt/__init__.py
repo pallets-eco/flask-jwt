@@ -30,7 +30,13 @@ _jwt = LocalProxy(lambda: current_app.extensions['jwt'])
 def _get_serializer():
     expires_in = current_app.config['JWT_EXPIRATION_DELTA']
     if isinstance(expires_in, timedelta):
-        expires_in = int(expires_in.total_seconds())
+        try:
+                expires_in = int(expires_in.total_seconds())
+        except AttributeError:
+                expires_in = int((expires_in.microseconds + 0.0 +
+                                 (expires_in.seconds + expires_in.days * 24 * 3600) * 10 ** 6) /
+                                 10 ** 6)
+
     expires_in_total = expires_in + current_app.config['JWT_LEEWAY']
     return TimedJSONWebSignatureSerializer(
         secret_key=current_app.config['JWT_SECRET_KEY'],
