@@ -148,8 +148,8 @@ def _jwt_required(realm):
     except jwt.InvalidTokenError as e:
         raise JWTError('Invalid token', str(e))
 
-    _request_ctx_stack.top.current_identity = identity = \
-        _jwt.identity_callback(payload)
+    _request_ctx_stack.top.current_identity = \
+        identity = _jwt.identity_callback(payload)
 
     if identity is None:
         raise JWTError('Invalid JWT', 'User does not exist')
