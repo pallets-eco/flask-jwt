@@ -19,7 +19,8 @@ from werkzeug.local import LocalProxy
 
 __version__ = '0.2.0'
 
-current_identity = LocalProxy(lambda: getattr(_request_ctx_stack.top, 'current_identity', None))
+current_identity = LocalProxy(lambda: getattr(
+    _request_ctx_stack.top, 'current_identity', None))
 
 _jwt = LocalProxy(lambda: current_app.extensions['jwt'])
 
@@ -44,7 +45,8 @@ def _default_jwt_headers_handler(identity):
 
 def _default_jwt_payload_handler(identity):
     return {
-        'exp': datetime.utcnow() + current_app.config.get('JWT_EXPIRATION_DELTA'),
+        'exp': (
+            datetime.utcnow() + current_app.config.get('JWT_EXPIRATION_DELTA')),
         'identity': getattr(identity, 'id') or identity['id']}
 
 
@@ -127,30 +129,35 @@ def _default_jwt_error_handler(error):
 
 def _jwt_required(realm):
     """Does the actual work of verifying the JWT data in the current request.
-    This is done automatically for you by `jwt_required()` but you could call it manually.
-    Doing so would be useful in the context of optional JWT access in your APIs.
+    This is done automatically for you by `jwt_required()` but you could call it
+    manually.  Doing so would be useful in the context of optional JWT access in
+    your APIs.
 
     :param realm: an optional realm
     """
     token = _jwt.request_callback()
 
     if token is None:
-        raise JWTError('Authorization Required', 'Request does not contain an access token',
-                       headers={'WWW-Authenticate': 'JWT realm="%s"' % realm})
+        raise JWTError(
+            'Authorization Required',
+            'Request does not contain an access token',
+            headers={'WWW-Authenticate': 'JWT realm="%s"' % realm})
 
     try:
         payload = _jwt.jwt_decode_callback(token)
     except jwt.InvalidTokenError as e:
         raise JWTError('Invalid token', str(e))
 
-    _request_ctx_stack.top.current_identity = identity = _jwt.identity_callback(payload)
+    _request_ctx_stack.top.current_identity = identity = \
+        _jwt.identity_callback(payload)
 
     if identity is None:
         raise JWTError('Invalid JWT', 'User does not exist')
 
 
 def jwt_required(realm=None):
-    """View decorator that requires a valid JWT token to be present in the request
+    """View decorator that requires a valid JWT token to be present in the
+    request
 
     :param realm: an optional realm
     """
@@ -177,7 +184,8 @@ def encode_token():
 
 class JWT(object):
 
-    def __init__(self, app=None, authentication_handler=None, identity_handler=None):
+    def __init__(self, app=None, authentication_handler=None,
+                 identity_handler=None):
         self.authentication_callback = authentication_handler
         self.identity_callback = identity_handler
 
@@ -202,10 +210,11 @@ class JWT(object):
 
         if auth_url_rule:
             assert self.authentication_callback is not None, (
-                'an authentication_handler function must be defined when using the built in '
-                'authentication request handler')
+                "an authentication_handler function must be defined when using "
+                "the built in authentication request handler")
 
-            auth_url_options = app.config.get('JWT_AUTH_URL_OPTIONS', {'methods': ['POST']})
+            auth_url_options = app.config.get(
+                'JWT_AUTH_URL_OPTIONS', {'methods': ['POST']})
             auth_url_options.setdefault('view_func', self.auth_request_callback)
             app.add_url_rule(auth_url_rule, **auth_url_options)
 
@@ -220,9 +229,10 @@ class JWT(object):
         return self.jwt_error_callback(error)
 
     def authentication_handler(self, callback):
-        """Specifies the identity handler function. This function receives two positional
-        arguments. The first being the username the second being the password. It should return an
-        object representing an authenticated identity. Example::
+        """Specifies the identity handler function. This function receives two
+        positional arguments. The first being the username the second being the
+        password. It should return an object representing an authenticated
+        identity. Example::
 
             @jwt.authentication_handler
             def authenticate(username, password):
@@ -236,8 +246,8 @@ class JWT(object):
         return callback
 
     def identity_handler(self, callback):
-        """Specifies the identity handler function. This function receives one positional argument
-        being the JWT payload. For example::
+        """Specifies the identity handler function. This function receives one
+        positional argument being the JWT payload. For example::
 
             @jwt.identity_handler
             def identify(payload):
@@ -277,8 +287,8 @@ class JWT(object):
         return callback
 
     def request_handler(self, callback):
-        """Specifieds the request handler function. This function returns a JWT from the current
-        request.
+        """Specifieds the request handler function. This function returns a JWT
+        from the current request.
 
         :param callable callback: the request handler function
         """
@@ -286,7 +296,8 @@ class JWT(object):
         return callback
 
     def jwt_encode_handler(self, callback):
-        """Specifies the encoding handler function. This function receives a payload and signs it.
+        """Specifies the encoding handler function. This function receives a
+        payload and signs it.
 
         :param callable callback: the encoding handler function
         """
@@ -303,8 +314,8 @@ class JWT(object):
         return callback
 
     def jwt_payload_handler(self, callback):
-        """Specifies the JWT payload handler function. This function receives the return value from
-        the ``identity_handler`` function
+        """Specifies the JWT payload handler function. This function receives
+        the return value from the ``identity_handler`` function
 
         Example::
 
@@ -318,8 +329,8 @@ class JWT(object):
         return callback
 
     def jwt_headers_handler(self, callback):
-        """Specifies the JWT header handler function. This function receives the return value from
-        the ``identity_handler`` function.
+        """Specifies the JWT header handler function. This function receives the
+        return value from the ``identity_handler`` function.
 
         Example::
 
