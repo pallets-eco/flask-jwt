@@ -38,6 +38,7 @@ def app(jwt, user):
     app = Flask(__name__)
     app.debug = True
     app.config['SECRET_KEY'] = 'super-secret'
+    app.config['JWT_REQUIRED_CLAIMS'] = []
 
     @jwt.authentication_handler
     def authenticate(username, password):
