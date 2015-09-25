@@ -17,7 +17,8 @@ import flask_jwt
 
 def post_json(client, url, data):
     data = json.dumps(data)
-    resp = client.post(url, headers={'Content-Type': 'application/json'}, data=data)
+    resp = client.post(url, headers={
+        'Content-Type': 'application/json'}, data=data)
     return resp, json.loads(resp.data)
 
 
@@ -36,7 +37,6 @@ def test_initialize():
     jwt = flask_jwt.JWT(app, lambda: None, lambda: None)
     assert isinstance(jwt, flask_jwt.JWT)
     assert len(app.url_map._rules) == 2
-
 
 def test_adds_auth_endpoint():
     app = Flask(__name__)
@@ -106,7 +106,9 @@ def test_jwt_required_decorator_with_valid_token(app, client, user):
 def test_jwt_required_decorator_with_valid_request_current_identity(app, client, user):
     with client as c:
         resp, jdata = post_json(
-            client, '/auth', {'username': user.username, 'password': user.password})
+            client,
+            '/auth',
+            {'username': user.username, 'password': user.password})
         token = jdata['access_token']
 
         c.get(
@@ -158,7 +160,8 @@ def test_jwt_required_decorator_with_invalid_jwt_tokens(client, user, app):
 
     # Undecipherable
     r = client.get('/protected', headers={'authorization': 'JWT %sX' % token})
-    assert_error_response(r, 401, 'Invalid token', 'Signature verification failed')
+    assert_error_response(
+        r, 401, 'Invalid token', 'Signature verification failed')
 
     # Expired
     time.sleep(1.5)
@@ -191,13 +194,12 @@ def test_custom_error_handler(client, jwt):
 def test_custom_response_handler(client, jwt, user):
     @jwt.auth_response_handler
     def resp_handler(access_token, identity):
-        return jsonify({'mytoken': access_token})
+        return jsonify({'mytoken': access_token.decode('utf-8')})
 
     resp, jdata = post_json(
         client, '/auth', {'username': user.username, 'password': user.password})
 
     assert 'mytoken' in jdata
-
 
 def test_custom_encode_handler(client, jwt, user, app):
     secret = app.config['JWT_SECRET_KEY']
@@ -253,7 +255,6 @@ def test_custom_payload_handler(client, jwt, user):
         c.get('/protected', headers={'authorization': 'JWT ' + token})
         assert flask_jwt.current_identity == user
 
-
 def test_custom_auth_header(app, client, user):
     app.config['JWT_AUTH_HEADER_PREFIX'] = 'Bearer'
 
@@ -264,10 +265,12 @@ def test_custom_auth_header(app, client, user):
         token = jdata['access_token']
 
         # Custom Bearer auth header prefix
-        resp = c.get('/protected', headers={'authorization': 'Bearer ' + token})
+        headers = {'Authorization': 'Bearer ' + token}
+        resp = c.get('/protected', headers=headers)
         assert resp.status_code == 200
         assert resp.data == b'success'
 
         # Not custom Bearer auth header prefix
         resp = c.get('/protected', headers={'authorization': 'JWT ' + token})
-        assert_error_response(resp, 401, 'Invalid JWT header', 'Unsupported authorization type')
+        assert_error_response(
+            resp, 401, 'Invalid JWT header', 'Unsupported authorization type')
