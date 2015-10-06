@@ -6,6 +6,8 @@
     Flask-JWT module
 """
 
+import logging
+
 from datetime import datetime
 
 from collections import OrderedDict
@@ -18,6 +20,8 @@ from flask import current_app, request, jsonify, _request_ctx_stack
 from werkzeug.local import LocalProxy
 
 __version__ = '0.2.0'
+
+logger = logging.getLogger(__name__)
 
 current_identity = LocalProxy(lambda: getattr(_request_ctx_stack.top, 'current_identity', None))
 
@@ -33,7 +37,8 @@ CONFIG_DEFAULTS = {
     'JWT_LEEWAY': 0,
     'JWT_AUTH_HEADER_PREFIX': 'JWT',
     'JWT_EXPIRATION_DELTA': timedelta(seconds=300),
-    'JWT_VERIFY_CLAIMS': ['signature', 'exp', 'nbf', 'iat', 'aud'],
+    'JWT_NOT_BEFORE_DELTA': timedelta(seconds=0),
+    'JWT_VERIFY_CLAIMS': ['signature', 'exp', 'nbf', 'iat'],
     'JWT_REQUIRED_CLAIMS': ['exp', 'iat', 'nbf']
 }
 
@@ -43,16 +48,26 @@ def _default_jwt_headers_handler(identity):
 
 
 def _default_jwt_payload_handler(identity):
-    return {
-        'exp': datetime.utcnow() + current_app.config.get('JWT_EXPIRATION_DELTA'),
-        'identity': getattr(identity, 'id') or identity['id']}
+    iat = datetime.utcnow()
+    exp = iat + current_app.config.get('JWT_EXPIRATION_DELTA')
+    nbf = iat + current_app.config.get('JWT_NOT_BEFORE_DELTA')
+    identity = getattr(identity, 'id') or identity['id']
+    return {'exp': exp, 'iat': iat, 'nbf': nbf, 'identity': identity}
 
 
 def _default_jwt_encode_handler(identity):
     secret = current_app.config['JWT_SECRET_KEY']
     algorithm = current_app.config['JWT_ALGORITHM']
+    required_claims = current_app.config['JWT_REQUIRED_CLAIMS']
+
     payload = _jwt.jwt_payload_callback(identity)
+    missing_claims = list(set(required_claims) - set(payload.keys()))
+
+    if missing_claims:
+        raise RuntimeError('Payload is missing required claims: %s' % ', '.join(missing_claims))
+
     headers = _jwt.jwt_headers_callback(identity)
+
     return jwt.encode(payload, secret, algorithm=algorithm, headers=headers)
 
 
@@ -114,10 +129,11 @@ def _default_auth_request_handler():
 
 
 def _default_auth_response_handler(access_token, identity):
-    return jsonify({'access_token': access_token})
+    return jsonify({'access_token': access_token.decode('utf-8')})
 
 
 def _default_jwt_error_handler(error):
+    logger.error(error)
     return jsonify(OrderedDict([
         ('status_code', error.status_code),
         ('error', error.error),
@@ -169,6 +185,12 @@ class JWTError(Exception):
         self.description = description
         self.status_code = status_code
         self.headers = headers
+
+    def __repr__(self):
+        return 'JWTError: %s' % self.error
+
+    def __str__(self):
+        return '%s. %s' % (self.error, self.description)
 
 
 def encode_token():

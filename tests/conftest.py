@@ -6,11 +6,15 @@
     Test fixtures and what not
 """
 
+import logging
+
 import pytest
 
 from flask import Flask
 
 import flask_jwt
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 class User(object):

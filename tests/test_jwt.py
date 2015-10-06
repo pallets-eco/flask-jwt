@@ -6,7 +6,8 @@
     Flask-JWT tests
 """
 import time
-from datetime import timedelta
+
+from datetime import datetime, timedelta
 
 import jwt as _jwt
 
@@ -191,7 +192,7 @@ def test_custom_error_handler(client, jwt):
 def test_custom_response_handler(client, jwt, user):
     @jwt.auth_response_handler
     def resp_handler(access_token, identity):
-        return jsonify({'mytoken': access_token})
+        return jsonify({'mytoken': access_token.decode('utf-8')})
 
     resp, jdata = post_json(
         client, '/auth', {'username': user.username, 'password': user.password})
@@ -242,7 +243,10 @@ def test_custom_payload_handler(client, jwt, user):
 
     @jwt.jwt_payload_handler
     def make_payload(u):
-        return {'id': u.id}
+        iat = datetime.utcnow()
+        exp = iat + timedelta(seconds=60)
+        nbf = iat + timedelta(seconds=0)
+        return {'iat': iat, 'exp': exp, 'nbf': nbf, 'id': u.id}
 
     with client as c:
         resp, jdata = post_json(
