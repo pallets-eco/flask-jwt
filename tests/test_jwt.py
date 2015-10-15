@@ -23,8 +23,8 @@ def post_json(client, url, data):
 
 
 def assert_error_response(r, code, msg, desc):
-    jdata = json.loads(r.data)
     assert r.status_code == code
+    jdata = json.loads(r.data)
     assert jdata['status_code'] == code
     assert jdata['error'] == msg
     assert jdata['description'] == desc
@@ -150,6 +150,7 @@ def test_jwt_required_decorator_with_invalid_authorization_headers(app, client):
 
 
 def test_jwt_required_decorator_with_invalid_jwt_tokens(client, user, app):
+    app.config['JWT_LEEWAY'] = timedelta(seconds=0)
     app.config['JWT_EXPIRATION_DELTA'] = timedelta(milliseconds=200)
 
     resp, jdata = post_json(
