@@ -23,7 +23,6 @@ def post_json(client, url, data):
 
 
 def assert_error_response(r, code, msg, desc):
-    print(r.data)
     jdata = json.loads(r.data)
     assert r.status_code == code
     assert jdata['status_code'] == code

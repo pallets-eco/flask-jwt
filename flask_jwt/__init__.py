@@ -8,7 +8,7 @@
 
 import logging
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from collections import OrderedDict
 from datetime import timedelta
@@ -34,7 +34,7 @@ CONFIG_DEFAULTS = {
     'JWT_AUTH_USERNAME_KEY': 'username',
     'JWT_AUTH_PASSWORD_KEY': 'password',
     'JWT_ALGORITHM': 'HS256',
-    'JWT_LEEWAY': 0,
+    'JWT_LEEWAY': timedelta(seconds=10),
     'JWT_AUTH_HEADER_PREFIX': 'JWT',
     'JWT_EXPIRATION_DELTA': timedelta(seconds=300),
     'JWT_NOT_BEFORE_DELTA': timedelta(seconds=0),
@@ -74,6 +74,7 @@ def _default_jwt_encode_handler(identity):
 def _default_jwt_decode_handler(token):
     secret = current_app.config['JWT_SECRET_KEY']
     algorithm = current_app.config['JWT_ALGORITHM']
+    leeway = current_app.config['JWT_LEEWAY']
 
     verify_claims = current_app.config['JWT_VERIFY_CLAIMS']
     required_claims = current_app.config['JWT_REQUIRED_CLAIMS']
@@ -88,7 +89,7 @@ def _default_jwt_decode_handler(token):
         for claim in required_claims
     })
 
-    return jwt.decode(token, secret, options=options, algorithms=[algorithm])
+    return jwt.decode(token, secret, options=options, algorithms=[algorithm], leeway=leeway)
 
 
 def _default_request_handler():
@@ -225,7 +226,7 @@ class JWT(object):
         if auth_url_rule:
             assert self.authentication_callback is not None, (
                 'an authentication_handler function must be defined when using the built in '
-                'authentication request handler')
+                'authentication resource')
 
             auth_url_options = app.config.get('JWT_AUTH_URL_OPTIONS', {'methods': ['POST']})
             auth_url_options.setdefault('view_func', self.auth_request_callback)

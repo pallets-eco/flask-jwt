@@ -8,7 +8,9 @@ Version 0.3.0
 
 Unreleased
 
-- Fix major implementation issue with encoding/decoding tokens (PyJWT)
+.. note:: This release includes many breaking changes
+
+- Fix major implementation issue with encoding/decoding tokens
 - Changed new configuration options to align with PyJWT
 - Changed `current_user` to `current_identity`
 
