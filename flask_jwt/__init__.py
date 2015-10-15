@@ -8,10 +8,8 @@
 
 import logging
 
-from datetime import datetime, timedelta
-
 from collections import OrderedDict
-from datetime import timedelta
+from datetime import datetime, timedelta
 from functools import wraps
 
 import jwt
