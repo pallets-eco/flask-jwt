@@ -1,7 +1,18 @@
 Flask-JWT Changelog
-========================
+===================
 
 Here you can see the full list of changes between each Flask-JWT release.
+
+Version 0.3.0
+-------------
+
+Unreleased
+
+.. note:: This release includes many breaking changes
+
+- Fix major implementation issue with encoding/decoding tokens
+- Changed new configuration options to align with PyJWT
+- Changed `current_user` to `current_identity`
 
 Version 0.2.0
 -------------

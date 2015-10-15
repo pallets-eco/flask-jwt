@@ -6,17 +6,25 @@
     Test fixtures and what not
 """
 
+import logging
+
 import pytest
 
 from flask import Flask
 
 import flask_jwt
 
+logging.basicConfig(level=logging.DEBUG)
+
 
 class User(object):
-    def __init__(self, **kwargs):
-        for k, v in kwargs.items():
-            setattr(self, k, v)
+    def __init__(self, id, username, password):
+        self.id = id
+        self.username = username
+        self.password = password
+
+    def __str__(self):
+        return "User(id='%s')" % self.id
 
 
 @pytest.fixture(scope='function')
@@ -35,18 +43,18 @@ def app(jwt, user):
     app.debug = True
     app.config['SECRET_KEY'] = 'super-secret'
 
-    jwt.init_app(app)
-
     @jwt.authentication_handler
     def authenticate(username, password):
         if username == user.username and password == user.password:
             return user
         return None
 
-    @jwt.user_handler
+    @jwt.identity_handler
     def load_user(payload):
-        if payload['user_id'] == user.id:
+        if payload['identity'] == user.id:
             return user
+
+    jwt.init_app(app)
 
     @app.route('/protected')
     @flask_jwt.jwt_required()

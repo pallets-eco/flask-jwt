@@ -6,9 +6,10 @@
     Flask-JWT tests
 """
 import time
-from datetime import timedelta
 
-from itsdangerous import TimedJSONWebSignatureSerializer
+from datetime import datetime, timedelta
+
+import jwt as _jwt
 
 from flask import Flask, json, jsonify
 
@@ -16,17 +17,14 @@ import flask_jwt
 
 
 def post_json(client, url, data):
-    resp = client.post(
-        url,
-        headers={'content-type': 'application/json'},
-        data=json.dumps(data)
-    )
+    data = json.dumps(data)
+    resp = client.post(url, headers={'Content-Type': 'application/json'}, data=data)
     return resp, json.loads(resp.data)
 
 
 def assert_error_response(r, code, msg, desc):
-    jdata = json.loads(r.data)
     assert r.status_code == code
+    jdata = json.loads(r.data)
     assert jdata['status_code'] == code
     assert jdata['error'] == msg
     assert jdata['description'] == desc
@@ -35,7 +33,7 @@ def assert_error_response(r, code, msg, desc):
 def test_initialize():
     app = Flask(__name__)
     app.config['SECRET_KEY'] = 'super-secret'
-    jwt = flask_jwt.JWT(app)
+    jwt = flask_jwt.JWT(app, lambda: None, lambda: None)
     assert isinstance(jwt, flask_jwt.JWT)
     assert len(app.url_map._rules) == 2
 
@@ -45,19 +43,16 @@ def test_adds_auth_endpoint():
     app.config['SECRET_KEY'] = 'super-secret'
     app.config['JWT_AUTH_URL_RULE'] = '/auth'
     app.config['JWT_AUTH_ENDPOINT'] = 'jwt_auth'
-    flask_jwt.JWT(app)
+    flask_jwt.JWT(app, lambda: None, lambda: None)
     rules = [str(r) for r in app.url_map._rules]
     assert '/auth' in rules
 
 
 def test_auth_endpoint_with_valid_request(client, user):
     resp, jdata = post_json(
-        client,
-        '/auth',
-        {'username': user.username, 'password': user.password}
-    )
+        client, '/auth', {'username': user.username, 'password': user.password})
     assert resp.status_code == 200
-    assert 'token' in jdata
+    assert 'access_token' in jdata
 
 
 def test_custom_auth_endpoint_with_valid_request(app, client, user):
@@ -69,130 +64,124 @@ def test_custom_auth_endpoint_with_valid_request(app, client, user):
         {'email': user.username, 'pass': user.password}
     )
     assert resp.status_code == 200
-    assert 'token' in jdata
+    assert 'access_token' in jdata
 
 
 def test_auth_endpoint_with_invalid_request(client, user):
     # Invalid request (no password)
     resp, jdata = post_json(client, '/auth', {'username': user.username})
-    assert resp.status_code == 400
-    assert 'error' in jdata
-    assert jdata['error'] == 'Bad Request'
-    assert 'description' in jdata
-    assert jdata['description'] == 'Missing required credentials'
-    assert 'status_code' in jdata
-    assert jdata['status_code'] == 400
-
-
-def test_auth_endpoint_with_invalid_credentials(client):
-    resp, jdata = post_json(
-        client,
-        '/auth',
-        {'username': 'bogus', 'password': 'bogus'}
-    )
-    assert resp.status_code == 400
+    assert resp.status_code == 401
     assert 'error' in jdata
     assert jdata['error'] == 'Bad Request'
     assert 'description' in jdata
     assert jdata['description'] == 'Invalid credentials'
     assert 'status_code' in jdata
-    assert jdata['status_code'] == 400
+    assert jdata['status_code'] == 401
+
+
+def test_auth_endpoint_with_invalid_credentials(client):
+    resp, jdata = post_json(
+        client, '/auth', {'username': 'bogus', 'password': 'bogus'})
+
+    assert resp.status_code == 401
+    assert 'error' in jdata
+    assert jdata['error'] == 'Bad Request'
+    assert 'description' in jdata
+    assert jdata['description'] == 'Invalid credentials'
+    assert 'status_code' in jdata
+    assert jdata['status_code'] == 401
 
 
 def test_jwt_required_decorator_with_valid_token(app, client, user):
     resp, jdata = post_json(
-        client,
-        '/auth',
-        {'username': user.username, 'password': user.password}
-    )
-    token = jdata['token']
-    resp = client.get(
-        '/protected',
-        headers={'authorization': 'JWT ' + token})
+        client, '/auth', {'username': user.username, 'password': user.password})
+
+    token = jdata['access_token']
+    resp = client.get('/protected', headers={'Authorization': 'JWT ' + token})
+
     assert resp.status_code == 200
     assert resp.data == b'success'
 
 
-def test_jwt_required_decorator_with_valid_request_current_user(app, client, user):
+def test_jwt_required_decorator_with_valid_request_current_identity(app, client, user):
     with client as c:
         resp, jdata = post_json(
-            client,
-            '/auth',
-            {'username': user.username, 'password': user.password}
-        )
-        token = jdata['token']
+            client, '/auth', {'username': user.username, 'password': user.password})
+        token = jdata['access_token']
 
         c.get(
             '/protected',
             headers={'authorization': 'JWT ' + token})
-        assert flask_jwt.current_user
+        assert flask_jwt.current_identity
 
 
-def test_jwt_required_decorator_with_invalid_request_current_user(app, client):
+def test_jwt_required_decorator_with_invalid_request_current_identity(app, client):
     with client as c:
-        c.get(
-            '/protected',
-            headers={'authorization': 'JWT bogus'})
-        assert not flask_jwt.current_user
+        c.get('/protected', headers={'authorization': 'JWT bogus'})
+        assert flask_jwt.current_identity._get_current_object() is None
 
 
 def test_jwt_required_decorator_with_invalid_authorization_headers(app, client):
     # Missing authorization header
     r = client.get('/protected')
-    assert_error_response(r, 401, 'Authorization Required', 'Authorization header was missing')
+
+    assert_error_response(
+        r, 401, 'Authorization Required', 'Request does not contain an access token')
+
     assert r.headers['WWW-Authenticate'] == 'JWT realm="Login Required"'
 
     # Not a JWT auth header prefix
     r = client.get('/protected', headers={'authorization': 'Bogus xxx'})
-    assert_error_response(r, 400, 'Invalid JWT header', 'Unsupported authorization type')
+
+    assert_error_response(
+        r, 401, 'Invalid JWT header', 'Unsupported authorization type')
 
     # Missing token
     r = client.get('/protected', headers={'authorization': 'JWT'})
-    assert_error_response(r, 400, 'Invalid JWT header', 'Token missing')
+
+    assert_error_response(
+        r, 401, 'Invalid JWT header', 'Token missing')
 
     # Token with spaces
     r = client.get('/protected', headers={'authorization': 'JWT xxx xxx'})
-    assert_error_response(r, 400, 'Invalid JWT header', 'Token contains spaces')
+
+    assert_error_response(
+        r, 401, 'Invalid JWT header', 'Token contains spaces')
 
 
 def test_jwt_required_decorator_with_invalid_jwt_tokens(client, user, app):
+    app.config['JWT_LEEWAY'] = timedelta(seconds=0)
     app.config['JWT_EXPIRATION_DELTA'] = timedelta(milliseconds=200)
 
     resp, jdata = post_json(
-        client,
-        '/auth',
-        {'username': user.username, 'password': user.password}
-    )
-    token = jdata['token']
+        client, '/auth', {'username': user.username, 'password': user.password})
+    token = jdata['access_token']
 
     # Undecipherable
     r = client.get('/protected', headers={'authorization': 'JWT %sX' % token})
-    assert_error_response(r, 400, 'Invalid JWT', 'Token is undecipherable')
+    assert_error_response(r, 401, 'Invalid token', 'Signature verification failed')
 
     # Expired
     time.sleep(1.5)
     r = client.get('/protected', headers={'authorization': 'JWT ' + token})
-    assert_error_response(r, 401, 'Expired JWT', 'Token is expired')
+    assert_error_response(r, 401, 'Invalid token', 'Signature has expired')
 
 
 def test_jwt_required_decorator_with_missing_user(client, jwt, user):
     resp, jdata = post_json(
-        client,
-        '/auth',
-        {'username': user.username, 'password': user.password}
-    )
-    token = jdata['token']
+        client, '/auth', {'username': user.username, 'password': user.password})
+    token = jdata['access_token']
 
-    @jwt.user_handler
+    @jwt.identity_handler
     def load_user(payload):
         return None
 
     r = client.get('/protected', headers={'authorization': 'JWT %s' % token})
-    assert_error_response(r, 400, 'Invalid JWT', 'User does not exist')
+    assert_error_response(r, 401, 'Invalid JWT', 'User does not exist')
 
 
 def test_custom_error_handler(client, jwt):
-    @jwt.error_handler
+    @jwt.jwt_error_handler
     def error_handler(e):
         return "custom"
 
@@ -201,101 +190,72 @@ def test_custom_error_handler(client, jwt):
 
 
 def test_custom_response_handler(client, jwt, user):
-
-    @jwt.response_handler
-    def resp_handler(payload):
-        return jsonify({'mytoken': payload})
+    @jwt.auth_response_handler
+    def resp_handler(access_token, identity):
+        return jsonify({'mytoken': access_token.decode('utf-8')})
 
     resp, jdata = post_json(
-        client,
-        '/auth',
-        {'username': user.username, 'password': user.password}
-    )
+        client, '/auth', {'username': user.username, 'password': user.password})
+
     assert 'mytoken' in jdata
 
 
-def test_default_encode_handler(client, user, app):
-    resp, jdata = post_json(
-        client,
-        '/auth',
-        {'username': user.username, 'password': user.password}
-    )
-
-    serializer = TimedJSONWebSignatureSerializer(
-        secret_key=app.config['JWT_SECRET_KEY']
-    )
-    decoded = serializer.loads(jdata['token'])
-    assert decoded['user_id'] == user.id
-
-
 def test_custom_encode_handler(client, jwt, user, app):
-    serializer = TimedJSONWebSignatureSerializer(
-        app.config['JWT_SECRET_KEY'],
-        algorithm_name=app.config['JWT_ALGORITHM']
-    )
+    secret = app.config['JWT_SECRET_KEY']
+    alg = 'HS256'
 
-    @jwt.encode_handler
-    def encode_data(payload):
-        return serializer.dumps({'foo': 42}).decode('utf-8')
+    @jwt.jwt_encode_handler
+    def encode_data(identity):
+        return _jwt.encode({'hello': 'world'}, secret, algorithm=alg)
+
     resp, jdata = post_json(
-        client,
-        '/auth',
-        {'username': user.username, 'password': user.password}
-    )
-    decoded = serializer.loads(jdata['token'])
-    assert decoded == {'foo': 42}
+        client, '/auth', {'username': user.username, 'password': user.password})
+
+    decoded = _jwt.decode(jdata['access_token'], secret, algorithms=[alg])
+
+    assert decoded == {'hello': 'world'}
 
 
 def test_custom_decode_handler(client, user, jwt):
+    # The following function should receive the decode return value
+    @jwt.identity_handler
+    def load_user(payload):
+        assert payload == {'user_id': user.id}
 
-    @jwt.decode_handler
-    def decode_data(data):
+    @jwt.jwt_decode_handler
+    def decode_data(token):
         return {'user_id': user.id}
 
     with client as c:
         resp, jdata = post_json(
-            client,
-            '/auth',
-            {'username': user.username, 'password': user.password}
-        )
-        token = jdata['token']
+            client, '/auth', {'username': user.username, 'password': user.password})
 
-        c.get(
-            '/protected',
-            headers={'authorization': 'JWT ' + token})
-        assert flask_jwt.current_user == user
+        token = jdata['access_token']
+
+        c.get('/protected', headers={'authorization': 'JWT ' + token})
 
 
 def test_custom_payload_handler(client, jwt, user):
-    @jwt.user_handler
+    @jwt.identity_handler
     def load_user(payload):
         if payload['id'] == user.id:
             return user
 
-    @jwt.payload_handler
+    @jwt.jwt_payload_handler
     def make_payload(u):
-        return {
-            'id': u.id
-        }
+        iat = datetime.utcnow()
+        exp = iat + timedelta(seconds=60)
+        nbf = iat + timedelta(seconds=0)
+        return {'iat': iat, 'exp': exp, 'nbf': nbf, 'id': u.id}
 
     with client as c:
         resp, jdata = post_json(
-            client,
-            '/auth',
-            {'username': user.username, 'password': user.password}
-        )
-        token = jdata['token']
+            client, '/auth', {'username': user.username, 'password': user.password})
 
-        c.get(
-            '/protected',
-            headers={'authorization': 'JWT ' + token})
-        assert flask_jwt.current_user == user
+        token = jdata['access_token']
 
-
-def test_generate_token(user, jwt, app):
-    with app.test_request_context():
-        token = flask_jwt.generate_token(user)
-        assert token == jwt.encode_callback(jwt.payload_callback(user))
+        c.get('/protected', headers={'authorization': 'JWT ' + token})
+        assert flask_jwt.current_identity == user
 
 
 def test_custom_auth_header(app, client, user):
@@ -303,11 +263,9 @@ def test_custom_auth_header(app, client, user):
 
     with client as c:
         resp, jdata = post_json(
-            client,
-            '/auth',
-            {'username': user.username, 'password': user.password}
-        )
-        token = jdata['token']
+            client, '/auth', {'username': user.username, 'password': user.password})
+
+        token = jdata['access_token']
 
         # Custom Bearer auth header prefix
         resp = c.get('/protected', headers={'authorization': 'Bearer ' + token})
@@ -316,4 +274,4 @@ def test_custom_auth_header(app, client, user):
 
         # Not custom Bearer auth header prefix
         resp = c.get('/protected', headers={'authorization': 'JWT ' + token})
-        assert_error_response(resp, 400, 'Invalid JWT header', 'Unsupported authorization type')
+        assert_error_response(resp, 401, 'Invalid JWT header', 'Unsupported authorization type')
