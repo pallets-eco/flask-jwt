@@ -1,13 +1,15 @@
 Flask-JWT
 ==============
 
-.. image:: https://secure.travis-ci.org/mattupstate/flask-jwt.png?branch=master
+.. image:: https://img.shields.io/travis/mattupstate/flask-jwt.svg
+    :target: https://travis-ci.org/mattupstate/flask-jwt
+    :alt: Latest Build
 
 .. image:: https://img.shields.io/pypi/v/flask-jwt.svg
     :target: https://pypi.python.org/pypi/Flask-JWT/
     :alt: Latest Version
 
-.. image:: https://coveralls.io/repos/mattupstate/flask-jwt/badge.png?branch=master
+.. image:: https://img.shields.io/coveralls/mattupstate/flask-jwt.svg
     :target: https://coveralls.io/r/mattupstate/flask-jwt
 
 .. image:: https://img.shields.io/pypi/dm/flask-jwt.svg
