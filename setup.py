@@ -54,7 +54,7 @@ class PyTest(TestCommand):
 
 setup(
     name='Flask-JWT',
-    version='0.3.0',
+    version='0.3.1',
     url='https://github.com/mattupstate/flask-jwt',
     license='MIT',
     author='Matt Wright',
