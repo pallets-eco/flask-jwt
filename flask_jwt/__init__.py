@@ -7,6 +7,7 @@
 """
 
 import logging
+import warnings
 
 from collections import OrderedDict
 from datetime import datetime, timedelta
@@ -222,9 +223,10 @@ class JWT(object):
         auth_url_rule = app.config.get('JWT_AUTH_URL_RULE', None)
 
         if auth_url_rule:
-            assert self.authentication_callback is not None, (
-                'an authentication_handler function must be defined when using the built in '
-                'authentication resource')
+            if self.auth_request_callback == _default_auth_request_handler:
+                assert self.authentication_callback is not None, (
+                    'an authentication_handler function must be defined when using the built in '
+                    'authentication resource')
 
             auth_url_options = app.config.get('JWT_AUTH_URL_OPTIONS', {'methods': ['POST']})
             auth_url_options.setdefault('view_func', self.auth_request_callback)
@@ -293,7 +295,13 @@ class JWT(object):
         """Specifies the authentication response handler function.
 
         :param callable callback: the auth request handler function
+
+        .. deprecated
         """
+        warnings.warn("This handler is deprecated. The recommended approach to have control over "
+                      "the authentication resource is to disable the built-in  resource by "
+                      "setting JWT_AUTH_URL_RULE=None and registering your own authentication "
+                      "resource directly on your application.", DeprecationWarning, stacklevel=2)
         self.auth_request_callback = callback
         return callback
 

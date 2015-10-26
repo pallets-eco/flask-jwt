@@ -10,6 +10,7 @@ import time
 from datetime import datetime, timedelta
 
 import jwt as _jwt
+import pytest
 
 from flask import Flask, json, jsonify
 
@@ -275,3 +276,18 @@ def test_custom_auth_header(app, client, user):
         # Not custom Bearer auth header prefix
         resp = c.get('/protected', headers={'authorization': 'JWT ' + token})
         assert_error_response(resp, 401, 'Invalid JWT header', 'Unsupported authorization type')
+
+
+def test_custom_auth_handler():
+    def custom_auth_request_handler():
+        return jsonify({'hello': 'world'})
+
+    jwt = flask_jwt.JWT()
+    pytest.deprecated_call(jwt.auth_request_handler, custom_auth_request_handler)
+
+    app = Flask(__name__)
+    jwt.init_app(app)
+
+    with app.test_client() as c:
+        resp, jdata = post_json(c, '/auth', {})
+        assert jdata == {'hello': 'world'}
