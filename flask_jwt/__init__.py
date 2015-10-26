@@ -262,7 +262,7 @@ class JWT(object):
 
             @jwt.identity_handler
             def identify(payload):
-                return User.query.filter(User.id == payload['user_id']).scalar()
+                return User.query.filter(User.id == payload['identity']).scalar()
 
         :param callback: the identity handler function
         """
@@ -292,9 +292,9 @@ class JWT(object):
     def auth_request_handler(self, callback):
         """Specifies the authentication response handler function.
 
-        :param callable callback: the auth response handler function
+        :param callable callback: the auth request handler function
         """
-        self.auth_response_callback = callback
+        self.auth_request_callback = callback
         return callback
 
     def request_handler(self, callback):
