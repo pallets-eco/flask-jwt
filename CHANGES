@@ -3,6 +3,14 @@ Flask-JWT Changelog
 
 Here you can see the full list of changes between each Flask-JWT release.
 
+Version 0.3.1
+-------------
+
+Released October 26th 2015
+
+- Fix a bug with `auth_request_handler`
+- Deprecate `auth_request_handler`
+
 Version 0.3.0
 -------------
 
