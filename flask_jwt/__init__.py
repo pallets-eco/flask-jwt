@@ -95,7 +95,7 @@ def _default_request_handler():
     auth_header_value = request.headers.get('Authorization', None)
     auth_header_prefix = current_app.config['JWT_AUTH_HEADER_PREFIX']
 
-    if auth_header_value is None:
+    if not auth_header_value:
         return
 
     parts = auth_header_value.split()
