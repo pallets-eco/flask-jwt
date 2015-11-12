@@ -291,3 +291,21 @@ def test_custom_auth_handler():
     with app.test_client() as c:
         resp, jdata = post_json(c, '/auth', {})
         assert jdata == {'hello': 'world'}
+
+
+def test_default_encode_handler_user_object(app, client, jwt, user):
+    with app.app_context():
+        token = jwt.jwt_encode_callback(user)
+
+        with client as c:
+            c.get('/protected', headers={'authorization': 'JWT ' + token})
+            assert flask_jwt.current_identity == user
+
+
+def test_default_encode_handler_dictuser(dictuserapp, jwt, dictuser):
+    with dictuserapp.app_context():
+        token = jwt.jwt_encode_callback(dictuser)
+
+        with dictuserapp.test_client() as c:
+            c.get('/protected', headers={'authorization': 'JWT ' + token})
+            assert flask_jwt.current_identity == dictuser
