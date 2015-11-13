@@ -298,7 +298,7 @@ def test_default_encode_handler_user_object(app, client, jwt, user):
         token = jwt.jwt_encode_callback(user)
 
         with client as c:
-            c.get('/protected', headers={'authorization': 'JWT ' + token})
+            c.get('/protected', headers={'authorization': 'JWT ' + token.decode('utf-8')})
             assert flask_jwt.current_identity == user
 
 
@@ -307,5 +307,5 @@ def test_default_encode_handler_dictuser(dictuserapp, jwt, dictuser):
         token = jwt.jwt_encode_callback(dictuser)
 
         with dictuserapp.test_client() as c:
-            c.get('/protected', headers={'authorization': 'JWT ' + token})
+            c.get('/protected', headers={'authorization': 'JWT ' + token.decode('utf-8')})
             assert flask_jwt.current_identity == dictuser
