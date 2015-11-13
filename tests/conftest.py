@@ -67,3 +67,35 @@ def app(jwt, user):
 @pytest.fixture(scope='function')
 def client(app):
     return app.test_client()
+
+
+@pytest.fixture(scope='function')
+def dictuserapp(jwt, dictuser):
+    app = Flask(__name__)
+    app.debug = True
+    app.config['SECRET_KEY'] = 'super-secret'
+
+    @jwt.authentication_handler
+    def authenticate(username, password):
+        if username == dictuser['username'] and password == dictuser['password']:
+            return dictuser
+        return None
+
+    @jwt.identity_handler
+    def load_user(payload):
+        if payload['identity'] == dictuser['id']:
+            return dictuser
+
+    jwt.init_app(app)
+
+    @app.route('/protected')
+    @flask_jwt.jwt_required()
+    def protected():
+        return 'success'
+
+    return app
+
+
+@pytest.fixture(scope='function')
+def dictuser():
+    return {'id': 1, 'username': 'joe', 'password': 'pass'}
