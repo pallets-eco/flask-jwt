@@ -127,19 +127,9 @@ Configuration Options
 ``JWT_AUTH_PASSWORD_KEY``  The password key in the authentication request
                            payload. Defaults to ``password``.
 ``JWT_ALGORITHM``          The token algorithm. Defaults to ``HS256``
-``JWT_LEEWAY``             The amount of leeway given when decoding access
-                           tokens specified as an integer of seconds or a
-                           ``datetime.timedelta`` instance. Defaults to
-                           ``timedelta(seconds=10)``.
-``JWT_VERIFY``             Flag indicating if all tokens should be verified.
-                           Defaults to ``True``. It is not recommended to
-                           change this value.
 ``JWT_AUTH_HEADER_PREFIX`` The Authorization header value prefix. Defaults to
                            ``JWT`` as to not conflict with OAuth2 Bearer
                            tokens. This is not a case sensitive value.
-``JWT_VERIFY_EXPIRATION``  Flag indicating if all tokens should verify their
-                           expiration time. Defaults to ``True``. It is not
-                           recommended to change this value.
 ``JWT_LEEWAY``             A token expiration leeway value. Defaults to ``0``.
 ``JWT_EXPIRATION_DELTA``   A ``datetime.timedelta`` value indicating how long
                            tokens are valid for. This value is added to the
