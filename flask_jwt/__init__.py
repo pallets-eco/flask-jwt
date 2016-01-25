@@ -51,7 +51,7 @@ def _default_jwt_payload_handler(identity):
     exp = iat + current_app.config.get('JWT_EXPIRATION_DELTA')
     nbf = iat + current_app.config.get('JWT_NOT_BEFORE_DELTA')
     identity = getattr(identity, 'id') or identity['id']
-    return {'exp': exp, 'iat': iat, 'nbf': nbf, 'identity': identity}
+    return {'exp': exp, 'iat': iat, 'nbf': nbf, 'identity': str(identity)}
 
 
 def _default_jwt_encode_handler(identity):
