@@ -111,12 +111,12 @@ def _default_request_handler():
 
 
 def _default_auth_request_handler():
-    data = request.get_json()
-    username = data.get(current_app.config.get('JWT_AUTH_USERNAME_KEY'), None)
-    password = data.get(current_app.config.get('JWT_AUTH_PASSWORD_KEY'), None)
-    criterion = [username, password, len(data) == 2]
+    data = request.get_json() or {}
+    username = data.get(current_app.config.get('JWT_AUTH_USERNAME_KEY'))
+    password = data.get(current_app.config.get('JWT_AUTH_PASSWORD_KEY'))
+    criteria = [username, password, len(data) == 2]
 
-    if not all(criterion):
+    if not all(criteria):
         raise JWTError('Bad Request', 'Invalid credentials')
 
     identity = _jwt.authentication_callback(username, password)
