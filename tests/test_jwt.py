@@ -292,7 +292,7 @@ def test_custom_auth_handler():
         resp, jdata = post_json(c, '/auth', {})
         assert jdata == {'hello': 'world'}
 
-		
+
 def test_authentication_handler_with_dictionary_result(client, jwt, user):
     @jwt.authentication_handler
     def authenticate(username, password):
@@ -304,3 +304,4 @@ def test_authentication_handler_with_dictionary_result(client, jwt, user):
         client, '/auth', {'username': user.username, 'password': user.password})
     assert resp.status_code == 200
     assert 'access_token' in jdata
+
