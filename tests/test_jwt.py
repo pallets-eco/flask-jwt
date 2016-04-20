@@ -304,4 +304,3 @@ def test_authentication_handler_with_dictionary_result(client, jwt, user):
         client, '/auth', {'username': user.username, 'password': user.password})
     assert resp.status_code == 200
     assert 'access_token' in jdata
-
