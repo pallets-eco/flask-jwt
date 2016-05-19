@@ -291,3 +291,27 @@ def test_custom_auth_handler():
     with app.test_client() as c:
         resp, jdata = post_json(c, '/auth', {})
         assert jdata == {'hello': 'world'}
+
+
+def test_object_vs_dict_handling_in_default_jwt_payload_handler(app):
+    """Test dicts do not cause Attribute error when looking for id key or field.
+    """
+    from flask_jwt import _default_jwt_payload_handler
+
+    class IDT(object):
+        def __init__(self):
+            self.id = "456"
+            self.name = "tony"
+
+    identity1 = IDT()
+
+    identity2 = {"id": "123456", "name": "bob"}
+
+    result = _default_jwt_payload_handler(identity1)
+    assert "identity" in result
+    assert result["identity"] == identity1.id
+
+    # This did explode with attribute error when a dict was used:
+    result = _default_jwt_payload_handler(identity2)
+    assert "identity" in result
+    assert result["identity"] == identity2['id']
