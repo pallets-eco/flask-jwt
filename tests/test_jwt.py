@@ -182,7 +182,7 @@ def test_jwt_required_decorator_with_missing_user(client, jwt, user):
 
 
 def test_custom_error_handler(client, jwt):
-    @jwt.jwt_error_handler
+    @jwt.error_handler
     def error_handler(e):
         return "custom"
 
@@ -205,7 +205,7 @@ def test_custom_encode_handler(client, jwt, user, app):
     secret = app.config['JWT_SECRET_KEY']
     alg = 'HS256'
 
-    @jwt.jwt_encode_handler
+    @jwt.encode_handler
     def encode_data(identity):
         return _jwt.encode({'hello': 'world'}, secret, algorithm=alg)
 
@@ -223,7 +223,7 @@ def test_custom_decode_handler(client, user, jwt):
     def load_user(payload):
         assert payload == {'user_id': user.id}
 
-    @jwt.jwt_decode_handler
+    @jwt.decode_handler
     def decode_data(token):
         return {'user_id': user.id}
 
@@ -242,7 +242,7 @@ def test_custom_payload_handler(client, jwt, user):
         if payload['id'] == user.id:
             return user
 
-    @jwt.jwt_payload_handler
+    @jwt.payload_handler
     def make_payload(u):
         iat = datetime.utcnow()
         exp = iat + timedelta(seconds=60)

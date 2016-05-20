@@ -271,7 +271,7 @@ class JWT(object):
         self.identity_callback = callback
         return callback
 
-    def jwt_error_handler(self, callback):
+    def error_handler(self, callback):
         """Specifies the error handler function. Example::
 
             @jwt.error_handler
@@ -314,7 +314,7 @@ class JWT(object):
         self.request_callback = callback
         return callback
 
-    def jwt_encode_handler(self, callback):
+    def encode_handler(self, callback):
         """Specifies the encoding handler function. This function receives a payload and signs it.
 
         :param callable callback: the encoding handler function
@@ -322,7 +322,7 @@ class JWT(object):
         self.jwt_encode_callback = callback
         return callback
 
-    def jwt_decode_handler(self, callback):
+    def decode_handler(self, callback):
         """Specifies the decoding handler function. This function receives a
         signed payload and decodes it.
 
@@ -331,7 +331,7 @@ class JWT(object):
         self.jwt_decode_callback = callback
         return callback
 
-    def jwt_payload_handler(self, callback):
+    def payload_handler(self, callback):
         """Specifies the JWT payload handler function. This function receives the return value from
         the ``identity_handler`` function
 
@@ -346,17 +346,17 @@ class JWT(object):
         self.jwt_payload_callback = callback
         return callback
 
-    def jwt_headers_handler(self, callback):
+    def headers_handler(self, callback):
         """Specifies the JWT header handler function. This function receives the return value from
         the ``identity_handler`` function.
 
         Example::
 
-            @jwt.payload_handler
-            def make_payload(identity):
+            @jwt.headers_handler
+            def make_headers(identity):
                 return {'user_id': identity.id}
 
-        :param callable callback: the payload handler function
+        :param callable callback: the header handler function
         """
         self.jwt_headers_callback = callback
         return callback
