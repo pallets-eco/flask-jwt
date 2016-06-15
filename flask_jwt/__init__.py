@@ -80,9 +80,15 @@ def _default_jwt_decode_handler(token):
     required_claims = current_app.config['JWT_REQUIRED_CLAIMS']
     audience = current_app.config['JWT_AUDIENCE']
 
-    options = dict(('verify_' + claim, True) for claim in verify_claims)
+    options = {
+        'verify_' + claim: claim in verify_claims
+        for claim in ['signature', 'exp', 'nbf', 'iat']
+    }
 
-    options.update(dict(('require_' + claim, True) for claim in required_claims))
+    options.update({
+        'require_' + claim: claim in required_claims
+        for claim in ['exp', 'nbf', 'iat']
+    })
 
     return jwt.decode(token, secret, options=options, algorithms=[algorithm], leeway=leeway,
                       audience=audience)
