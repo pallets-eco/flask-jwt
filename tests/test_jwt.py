@@ -318,3 +318,21 @@ def test_audience(client, jwt, user, app):
         resp = c.get('/protected', headers={'authorization': 'JWT ' + token})
         assert resp.status_code == 200
         assert 'access_token' in jdata
+
+
+def test_default_encode_handler_user_object(app, client, jwt, user):
+    with app.app_context():
+        token = jwt.jwt_encode_callback(user)
+
+        with client as c:
+            c.get('/protected', headers={'authorization': 'JWT ' + token.decode('utf-8')})
+            assert flask_jwt.current_identity == user
+
+
+def test_default_encode_handler_dictuser(dictuserapp, jwt, dictuser):
+    with dictuserapp.app_context():
+        token = jwt.jwt_encode_callback(dictuser)
+
+        with dictuserapp.test_client() as c:
+            c.get('/protected', headers={'authorization': 'JWT ' + token.decode('utf-8')})
+            assert flask_jwt.current_identity == dictuser
