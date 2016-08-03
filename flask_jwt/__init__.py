@@ -109,7 +109,6 @@ def _default_request_handler():
 
 def _default_auth_request_handler():
     data = request.get_json()
-
     if not data:
         raise JWTError('Bad Request', 'Credentials must supplied in JSON')
 
