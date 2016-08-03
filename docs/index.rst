@@ -165,6 +165,12 @@ API
 
 .. autofunction:: jwt_required
 
+Deployment
+---
+When using Apache and mod_wsgi, the Authorization header is not passed through to the WSGI app by default. To enable this, add 
+::
+    WSGIPassAuthorization On
+to your site's .conf file.
 
 Changelog
 ---------
