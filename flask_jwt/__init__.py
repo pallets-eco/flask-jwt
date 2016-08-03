@@ -221,8 +221,9 @@ class JWT(object):
         app.config.setdefault('JWT_SECRET_KEY', app.config['SECRET_KEY'])
 
         auth_url_rule = app.config.get('JWT_AUTH_URL_RULE', None)
+        endpoint = app.config.get('JWT_AUTH_ENDPOINT', None)
 
-        if auth_url_rule:
+        if auth_url_rule and endpoint:
             if self.auth_request_callback == _default_auth_request_handler:
                 assert self.authentication_callback is not None, (
                     'an authentication_handler function must be defined when using the built in '
@@ -230,6 +231,7 @@ class JWT(object):
 
             auth_url_options = app.config.get('JWT_AUTH_URL_OPTIONS', {'methods': ['POST']})
             auth_url_options.setdefault('view_func', self.auth_request_callback)
+            auth_url_options.setdefault('endpoint', endpoint)
             app.add_url_rule(auth_url_rule, **auth_url_options)
 
         app.errorhandler(JWTError)(self._jwt_error_callback)

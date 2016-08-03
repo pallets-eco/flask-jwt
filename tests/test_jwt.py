@@ -46,7 +46,9 @@ def test_adds_auth_endpoint():
     app.config['JWT_AUTH_ENDPOINT'] = 'jwt_auth'
     flask_jwt.JWT(app, lambda: None, lambda: None)
     rules = [str(r) for r in app.url_map._rules]
+    endpoints = [r.endpoint for r in app.url_map.iter_rules()]
     assert '/auth' in rules
+    assert 'jwt_auth' in endpoints
 
 
 def test_auth_endpoint_with_valid_request(client, user):
