@@ -353,10 +353,10 @@ class JWT(object):
         Example::
 
             @jwt.jwt_headers_handler
-            def make_payload(identity):
+            def make_header(identity):
                 return {'user_id': identity.id}
 
-        :param callable callback: the payload handler function
+        :param callable callback: the header handler function
         """
         self.jwt_headers_callback = callback
         return callback
