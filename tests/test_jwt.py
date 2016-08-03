@@ -291,3 +291,30 @@ def test_custom_auth_handler():
     with app.test_client() as c:
         resp, jdata = post_json(c, '/auth', {})
         assert jdata == {'hello': 'world'}
+
+
+def test_audience(client, jwt, user, app):
+    aud = 'http://audience/'
+    app.config['JWT_AUDIENCE'] = aud
+
+    @jwt.identity_handler
+    def load_user(payload):
+        if payload['id'] == user.id:
+            return user
+
+    @jwt.jwt_payload_handler
+    def make_payload(u):
+        iat = datetime.utcnow()
+        exp = iat + timedelta(seconds=60)
+        nbf = iat + timedelta(seconds=0)
+        return {'iat': iat, 'exp': exp, 'nbf': nbf, 'id': u.id, 'aud': aud}
+
+    with client as c:
+        resp, jdata = post_json(
+            client, '/auth', {'username': user.username, 'password': user.password})
+
+        token = jdata['access_token']
+
+        resp = c.get('/protected', headers={'authorization': 'JWT ' + token})
+        assert resp.status_code == 200
+        assert 'access_token' in jdata
