@@ -2,7 +2,8 @@
 Flask-JWT
 =========
 
-Flask-JWT is a Flask extension that adds basic Json Web Token features to any application.
+Flask-JWT is a Flask extension that adds basic Json Web Token features to any
+application.
 
 Resources
 ---------
@@ -53,9 +54,9 @@ class PyTest(TestCommand):
         sys.exit(errno)
 
 setup(
-    name='Flask-JWT',
-    version='0.3.2',
-    url='https://github.com/mattupstate/flask-jwt',
+    name='Webstack-Flask-JWT',
+    version='0.3.3',
+    url='https://github.com/webstack/flask-jwt',
     license='MIT',
     author='Matt Wright',
     author_email='matt@nobien.net',
@@ -69,7 +70,7 @@ setup(
     tests_require=get_requirements('-dev'),
     cmdclass={'test': PyTest},
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',

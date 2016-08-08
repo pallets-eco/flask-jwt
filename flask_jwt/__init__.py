@@ -18,7 +18,7 @@ import jwt
 from flask import current_app, request, jsonify, _request_ctx_stack
 from werkzeug.local import LocalProxy
 
-__version__ = '0.3.2'
+__version__ = '0.3.3'
 
 logger = logging.getLogger(__name__)
 

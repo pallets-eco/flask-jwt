@@ -3,6 +3,11 @@ Flask-JWT Changelog
 
 Here you can see the full list of changes between each Flask-JWT release.
 
+Version 0.3.3 - Webstack
+------------------------
+
+https://github.com/mattupstate/flask-jwt/pull/95
+
 Version 0.3.2
 -------------
 
