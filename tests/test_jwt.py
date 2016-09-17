@@ -92,6 +92,17 @@ def test_auth_endpoint_with_invalid_credentials(client):
     assert 'status_code' in jdata
     assert jdata['status_code'] == 401
 
+def test_auth_endpoint_with_empty_json_in_request(client, user):
+    resp, jdata = post_json(
+        client, '/auth', None)
+    assert resp.status_code == 401
+    assert 'error' in jdata
+    assert jdata['error'] == 'Bad Request'
+    assert 'description' in jdata
+    assert jdata['description'] == 'Invalid credentials'
+    assert 'status_code' in jdata
+    assert jdata['status_code'] == 401
+
 
 def test_jwt_required_decorator_with_valid_token(app, client, user):
     resp, jdata = post_json(
