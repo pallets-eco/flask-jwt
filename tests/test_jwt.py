@@ -92,6 +92,7 @@ def test_auth_endpoint_with_invalid_credentials(client):
     assert 'status_code' in jdata
     assert jdata['status_code'] == 401
 
+
 def test_auth_endpoint_with_empty_json_in_request(client, user):
     resp, jdata = post_json(
         client, '/auth', None)

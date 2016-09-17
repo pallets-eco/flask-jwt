@@ -112,10 +112,8 @@ def _default_request_handler():
 
 def _default_auth_request_handler():
     data = request.get_json()
-    
-    if not data:
+    if data is None:
         raise JWTError('Bad Request', 'Invalid credentials')
-
     username = data.get(current_app.config.get('JWT_AUTH_USERNAME_KEY'), None)
     password = data.get(current_app.config.get('JWT_AUTH_PASSWORD_KEY'), None)
     criterion = [username, password, len(data) == 2]
