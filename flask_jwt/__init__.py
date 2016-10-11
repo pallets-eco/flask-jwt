@@ -292,7 +292,7 @@ class JWT(object):
         return callback
 
     def auth_request_handler(self, callback):
-        """Specifies the authentication response handler function.
+        """Specifies the authentication request handler function.
 
         :param callable callback: the auth request handler function
 
