@@ -6,7 +6,6 @@
     Flask-JWT module
 """
 
-import logging
 import warnings
 
 from collections import OrderedDict
@@ -19,8 +18,6 @@ from flask import current_app, request, jsonify, _request_ctx_stack
 from werkzeug.local import LocalProxy
 
 __version__ = '0.3.3'
-
-logger = logging.getLogger(__name__)
 
 current_identity = LocalProxy(lambda: getattr(_request_ctx_stack.top, 'current_identity', None))
 
@@ -139,7 +136,6 @@ def _default_auth_response_handler(access_token, identity):
 
 
 def _default_jwt_error_handler(error):
-    logger.error(error)
     return jsonify(OrderedDict([
         ('status_code', error.status_code),
         ('error', error.error),
