@@ -36,6 +36,7 @@ CONFIG_DEFAULTS = {
     'JWT_LEEWAY': timedelta(seconds=10),
     'JWT_AUTH_HEADER_PREFIX': 'JWT',
     'JWT_EXPIRATION_DELTA': timedelta(seconds=300),
+    'JWT_VERIFY_EXPIRATION': False,
     'JWT_NOT_BEFORE_DELTA': timedelta(seconds=0),
     'JWT_VERIFY_CLAIMS': ['signature', 'exp', 'nbf', 'iat'],
     'JWT_REQUIRED_CLAIMS': ['exp', 'iat', 'nbf']
@@ -76,12 +77,18 @@ def _default_jwt_decode_handler(token):
     leeway = current_app.config['JWT_LEEWAY']
 
     verify_claims = current_app.config['JWT_VERIFY_CLAIMS']
+    verify_expiration = current_app.config['JWT_VERIFY_EXPIRATION']
     required_claims = current_app.config['JWT_REQUIRED_CLAIMS']
 
     options = {
         'verify_' + claim: True
         for claim in verify_claims
     }
+
+    if not verify_expiration:
+        options.update({
+            'verify_exp': False
+        })
 
     options.update({
         'require_' + claim: True
