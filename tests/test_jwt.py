@@ -155,7 +155,6 @@ def test_jwt_required_decorator_with_invalid_jwt_tokens(client, user, app):
     app.config['JWT_EXPIRATION_DELTA'] = timedelta(milliseconds=200)
     app.config['JWT_VERIFY_EXPIRATION'] = True
 
-
     resp, jdata = post_json(
         client, '/auth', {'username': user.username, 'password': user.password})
     token = jdata['access_token']
