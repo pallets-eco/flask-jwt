@@ -30,6 +30,7 @@ CONFIG_DEFAULTS = {
     'JWT_AUTH_USERNAME_KEY': 'username',
     'JWT_AUTH_PASSWORD_KEY': 'password',
     'JWT_ALGORITHM': 'HS256',
+    'JWT_ROLE': 'role',
     'JWT_LEEWAY': timedelta(seconds=10),
     'JWT_AUTH_HEADER_PREFIX': 'JWT',
     'JWT_EXPIRATION_DELTA': timedelta(seconds=300),
@@ -143,7 +144,21 @@ def _default_jwt_error_handler(error):
     ])), error.status_code, error.headers
 
 
-def _jwt_required(realm):
+def _force_iterable(input):
+    """If role is just a string, force it to an array.
+    """
+    try:
+        basestring
+    except NameError:
+        basestring = str
+    if isinstance(input, basestring):
+        return [input]
+    if not hasattr(input, "__iter__"):
+        return [input]
+    return input
+
+
+def _jwt_required(realm, roles):
     """Does the actual work of verifying the JWT data in the current request.
     This is done automatically for you by `jwt_required()` but you could call it manually.
     Doing so would be useful in the context of optional JWT access in your APIs.
@@ -165,17 +180,33 @@ def _jwt_required(realm):
 
     if identity is None:
         raise JWTError('Invalid JWT', 'User does not exist')
+    if roles:
+        try:
+            identity_role = getattr(identity, current_app.config['JWT_ROLE'])
+        except AttributeError:
+            try:
+                identity_role = identity.get(current_app.config['JWT_ROLE'])
+            except AttributeError:
+                raise JWTError('Bad Request', 'Invalid credentials')
+        if not identity_role:
+            raise JWTError('Bad Request', 'Invalid credentials')
+        identity_role = _force_iterable(identity_role)
+        roles = _force_iterable(roles)
+        if not identity_role or not set(roles).intersection(identity_role):
+            raise JWTError('Bad Request', 'Invalid credentials')
 
 
-def jwt_required(realm=None):
+def jwt_required(realm=None, roles=None):
     """View decorator that requires a valid JWT token to be present in the request
 
     :param realm: an optional realm
+    :param roles: an optional list of roles allowed,
+                  the role is pick in JWT_ROLE field of identity
     """
     def wrapper(fn):
         @wraps(fn)
         def decorator(*args, **kwargs):
-            _jwt_required(realm or current_app.config['JWT_DEFAULT_REALM'])
+            _jwt_required(realm or current_app.config['JWT_DEFAULT_REALM'], roles)
             return fn(*args, **kwargs)
         return decorator
     return wrapper
