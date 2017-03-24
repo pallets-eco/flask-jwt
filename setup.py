@@ -54,7 +54,7 @@ class PyTest(TestCommand):
         sys.exit(errno)
 
 setup(
-    name='Webstack-Flask-JWT',
+    name='webstack-flask-jwt',
     version='0.3.4',
     url='https://github.com/webstack/flask-jwt',
     license='MIT',
