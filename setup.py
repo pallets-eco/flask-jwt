@@ -55,7 +55,7 @@ class PyTest(TestCommand):
 
 setup(
     name='Webstack-Flask-JWT',
-    version='0.3.3',
+    version='0.3.4',
     url='https://github.com/webstack/flask-jwt',
     license='MIT',
     author='Matt Wright',
