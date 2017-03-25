@@ -278,7 +278,7 @@ class JWT(object):
     def error_handler(self, callback):
         """Specifies the error handler function. Example::
 
-            @jwt.jwt_error_handler
+            @jwt.error_handler
             def error_handler(e):
                 return "Something bad happened", 400
 
@@ -341,7 +341,7 @@ class JWT(object):
 
         Example::
 
-            @jwt.jwt_payload_handler
+            @jwt.payload_handler
             def make_payload(identity):
                 return {'user_id': identity.id}
 
