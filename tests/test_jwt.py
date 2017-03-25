@@ -351,3 +351,146 @@ def test_default_encode_handler_dictuser(dictuserapp, jwt, dictuser):
         with dictuserapp.test_client() as c:
             c.get('/protected', headers={'authorization': 'JWT ' + token.decode('utf-8')})
             assert flask_jwt.current_identity == dictuser
+
+
+def test_role_required(app_with_role, user_with_role):
+    with app_with_role.test_client() as c:
+        resp, jdata = post_json(
+            c, '/auth', {'username': user_with_role.username, 'password': user_with_role.password})
+        token = jdata['access_token']
+
+        # check if protected works with role set but not asked for this path
+        resp = c.get('/protected', headers={'authorization': 'JWT ' + token})
+        assert resp.status_code == 200
+        assert resp.data == b'success'
+
+        # check if protected works wit role set but not asked for this path
+        resp = c.get('/role/protected/user', headers={'Authorization': 'JWT ' + token})
+
+        assert resp.status_code == 200
+        assert resp.data == b'success'
+
+
+def test_role_required_bad(app_with_role, user, user_with_role):
+    with app_with_role.test_client() as c:
+
+        # test bad role
+        resp, jdata = post_json(
+            c, '/auth', {'username': user_with_role.username, 'password': user_with_role.password})
+
+        token = jdata['access_token']
+        resp = c.get('/role/protected/admin', headers={'Authorization': 'JWT ' + token})
+
+        assert resp.status_code == 401
+
+        # test no role
+        resp, jdata = post_json(
+            c, '/auth', {'username': user.username, 'password': user.password})
+
+        token = jdata['access_token']
+        resp = c.get('/role/protected/admin', headers={'Authorization': 'JWT ' + token})
+
+        assert resp.status_code == 401
+
+
+def test_role_required_multi(app_with_role, user_with_roles):
+    with app_with_role.test_client() as c:
+        resp, jdata = post_json(c, '/auth', {'username': user_with_roles.username,
+                                             'password': user_with_roles.password})
+        token = jdata['access_token']
+
+        # check if protected works with role set but not asked for this path
+        resp = c.get('/protected', headers={'authorization': 'JWT ' + token})
+        assert resp.status_code == 200
+        assert resp.data == b'success'
+
+        resp = c.get('/role/protected/user', headers={'Authorization': 'JWT ' + token})
+
+        assert resp.status_code == 200
+        assert resp.data == b'success'
+
+
+def test_role_required_multi_bad(app_with_role, user_with_roles):
+    with app_with_role.test_client() as c:
+        resp, jdata = post_json(c, '/auth', {'username': user_with_roles.username,
+                                             'password': user_with_roles.password})
+
+        token = jdata['access_token']
+        resp = c.get('/role/protected/admin', headers={'Authorization': 'JWT ' + token})
+
+        assert resp.status_code == 401
+
+
+def test_multirole_required_multi(app_with_role, user, user_with_roles):
+    with app_with_role.test_client() as c:
+        resp, jdata = post_json(c, '/auth', {'username': user_with_roles.username,
+                                             'password': user_with_roles.password})
+        token = jdata['access_token']
+
+        # check if protected works with role set but not asked for this path
+        resp = c.get('/protected', headers={'authorization': 'JWT ' + token})
+        assert resp.status_code == 200
+        assert resp.data == b'success'
+
+        resp = c.get('/role/protected/multi', headers={'Authorization': 'JWT ' + token})
+
+        assert resp.status_code == 200
+        assert resp.data == b'success'
+
+        # test no role
+        resp, jdata = post_json(
+            c, '/auth', {'username': user.username, 'password': user.password})
+
+        token = jdata['access_token']
+        resp = c.get('/role/protected/multi', headers={'Authorization': 'JWT ' + token})
+
+        assert resp.status_code == 401
+
+
+def test_role_custom(app_with_role_trust_jwt, user, user_with_role, user_with_roles):
+    with app_with_role_trust_jwt.test_client() as c:
+        resp, jdata = post_json(c, '/auth', {'username': user_with_role.username,
+                                             'password': user_with_role.password})
+        token = jdata['access_token']
+
+        # check if protected works with role set but not asked for this path
+        resp = c.get('/protected', headers={'authorization': 'JWT ' + token})
+        assert resp.status_code == 200
+        assert resp.data == b'success'
+
+        # check unauthorized role protection
+        resp = c.get('/role/protected/admin', headers={'Authorization': 'JWT ' + token})
+
+        assert resp.status_code == 401
+
+        resp = c.get('/role/protected/multi', headers={'Authorization': 'JWT ' + token})
+
+        assert resp.status_code == 200
+        assert resp.data == b'success'
+
+        resp = c.get('/role/protected/user', headers={'Authorization': 'JWT ' + token})
+
+        assert resp.status_code == 200
+        assert resp.data == b'success'
+
+        resp, jdata = post_json(c, '/auth', {'username': user_with_roles.username,
+                                             'password': user_with_roles.password})
+        token = jdata['access_token']
+
+        # check if protected works with role set but not asked for this path
+        resp = c.get('/protected', headers={'authorization': 'JWT ' + token})
+        assert resp.status_code == 200
+        assert resp.data == b'success'
+
+        resp = c.get('/role/protected/multi', headers={'Authorization': 'JWT ' + token})
+
+        assert resp.status_code == 200
+        assert resp.data == b'success'
+        # test no role
+        resp, jdata = post_json(
+            c, '/auth', {'username': user.username, 'password': user.password})
+
+        token = jdata['access_token']
+        resp = c.get('/role/protected/multi', headers={'Authorization': 'JWT ' + token})
+
+        assert resp.status_code == 401
