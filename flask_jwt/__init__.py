@@ -17,7 +17,7 @@ import jwt
 from flask import current_app, request, jsonify, _request_ctx_stack
 from werkzeug.local import LocalProxy
 
-__version__ = '0.3.4'
+__version__ = '0.4'
 
 current_identity = LocalProxy(lambda: getattr(_request_ctx_stack.top, 'current_identity', None))
 

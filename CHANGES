@@ -3,10 +3,17 @@ Flask-JWT Changelog
 
 Here you can see the full list of changes between each Flask-JWT release.
 
+Version 0.4 - Webstack
+----------------------
+
+- Add role check by Aurélien Lajoie
+  https://github.com/webstack/flask-jwt/pull/4
+
 Version 0.3.4 - Webstack
 ------------------------
 
-- Remove logging of errors
+- Remove logging of errors by Jean-Philippe Morin
+  https://github.com/webstack/flask-jwt/pull/2
 
 Version 0.3.3 - Webstack
 ------------------------
