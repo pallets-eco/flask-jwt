@@ -43,7 +43,6 @@ class PyTest(TestCommand):
             '--cov-report', 'term-missing',
             '--pep8',
             '--flakes',
-            '--clearcache',
             'tests'
         ]
         self.test_suite = True
