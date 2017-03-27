@@ -97,7 +97,7 @@ def app_with_role(jwt, user, user_with_role, user_with_roles):
             if payload['identity'] == u.id:
                 return u
 
-    @jwt.jwt_payload_handler
+    @jwt.payload_handler
     def make_payload(identity):
         iat = datetime.utcnow()
         exp = iat + timedelta(seconds=300)
@@ -153,7 +153,7 @@ def app_with_role_trust_jwt(jwt, user, user_with_role, user_with_roles):
     def load_user(payload):
         return payload
 
-    @jwt.jwt_payload_handler
+    @jwt.payload_handler
     def make_payload(identity):
         iat = datetime.utcnow()
         exp = iat + timedelta(seconds=300)
