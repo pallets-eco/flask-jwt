@@ -15,18 +15,25 @@ Resources
   <https://github.com/mattupstate/flask-jwt/raw/develop#egg=Flask-JWT-dev>`_
 
 """
-
+import ast
 import sys
+import re
 
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 
+_version_re = re.compile(r'__version__\s+=\s+(.*)')
+
+PROJECT = 'flask_jwt'
+
+with open(PROJECT + '/__init__.py', 'rb') as f:
+    version = str(ast.literal_eval(_version_re.search(
+        f.read().decode('utf-8')).group(1)))
 
 def get_requirements(suffix=''):
     with open('requirements%s.txt' % suffix) as f:
         rv = f.read().splitlines()
     return rv
-
 
 def get_long_description():
     with open('README.rst') as f:
@@ -54,7 +61,7 @@ class PyTest(TestCommand):
 
 setup(
     name='webstack-flask-jwt',
-    version='0.3.4',
+    version=version,
     url='https://github.com/webstack/flask-jwt',
     license='MIT',
     author='Matt Wright',
