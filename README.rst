@@ -31,3 +31,10 @@ Resources
 - `Code <http://github.com/mattupstate/flask-jwt/>`_
 - `Development Version
   <http://github.com/mattupstate/flask-jwt/zipball/develop#egg=Flask-JWTy-dev>`_
+
+Tests
+-----
+
+To run tests::
+
+    python ./setup.py test

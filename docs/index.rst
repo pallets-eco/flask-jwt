@@ -23,7 +23,7 @@ Install with **pip** or **easy_install**::
 
 or download the latest version from version control::
 
-    git clone https://github.com/mattupstate/flask-jwt.git ./flask-jwt
+    git clone https://github.com/mattupstate/flask-jwt.git flask-jwt
     pip install ./flask-jwt
 
 
@@ -166,8 +166,8 @@ API
 .. autofunction:: jwt_required
 
 Deployment
----
-When using Apache and mod_wsgi, the Authorization header is not passed through to the WSGI app by default. To enable this, add 
+----------
+When using Apache and mod_wsgi, the Authorization header is not passed through to the WSGI app by default. To enable this, add
 ::
     WSGIPassAuthorization On
 to your site's .conf file.
