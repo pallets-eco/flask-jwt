@@ -17,7 +17,7 @@ import jwt
 
 from flask import current_app, request, jsonify, _request_ctx_stack
 from werkzeug.local import LocalProxy
-from werkzeug.exceptions import HTTPException
+from werkzeug.exceptions import BadRequest
 
 __version__ = '0.3.2'
 
@@ -39,7 +39,8 @@ CONFIG_DEFAULTS = {
     'JWT_EXPIRATION_DELTA': timedelta(seconds=300),
     'JWT_NOT_BEFORE_DELTA': timedelta(seconds=0),
     'JWT_VERIFY_CLAIMS': ['signature', 'exp', 'nbf', 'iat'],
-    'JWT_REQUIRED_CLAIMS': ['exp', 'iat', 'nbf']
+    'JWT_REQUIRED_CLAIMS': ['exp', 'iat', 'nbf'],
+    'TRAP_BAD_REQUEST_ERRORS': True,
 }
 
 
@@ -180,8 +181,11 @@ def jwt_required(realm=None):
     return wrapper
 
 
-class JWTError(HTTPException):
+class JWTError(BadRequest):
+# class JWTError(Exception):
     def __init__(self, error, description, status_code=401, headers=None):
+        # HTTPException.__init__(
+        #     self=self, description=description, response=None)
         self.error = error
         self.description = description
         self.status_code = status_code
@@ -220,7 +224,7 @@ class JWT(object):
         for k, v in CONFIG_DEFAULTS.items():
             app.config.setdefault(k, v)
         app.config.setdefault('JWT_SECRET_KEY', app.config['SECRET_KEY'])
-
+        app.config['TRAP_BAD_REQUEST_ERRORS'] = True
         auth_url_rule = app.config.get('JWT_AUTH_URL_RULE', None)
 
         if auth_url_rule:
