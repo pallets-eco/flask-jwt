@@ -17,6 +17,7 @@ import jwt
 
 from flask import current_app, request, jsonify, _request_ctx_stack
 from werkzeug.local import LocalProxy
+from werkzeug.exceptions import HTTPException
 
 __version__ = '0.3.2'
 
@@ -179,7 +180,7 @@ def jwt_required(realm=None):
     return wrapper
 
 
-class JWTError(Exception):
+class JWTError(HTTPException):
     def __init__(self, error, description, status_code=401, headers=None):
         self.error = error
         self.description = description
