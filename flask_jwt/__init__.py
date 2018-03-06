@@ -18,7 +18,7 @@ import jwt
 from flask import current_app, request, jsonify, _request_ctx_stack
 from werkzeug.local import LocalProxy
 
-__version__ = '0.3.2'
+__version__ = '0.3.3'
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +50,10 @@ def _default_jwt_payload_handler(identity):
     iat = datetime.utcnow()
     exp = iat + current_app.config.get('JWT_EXPIRATION_DELTA')
     nbf = iat + current_app.config.get('JWT_NOT_BEFORE_DELTA')
-    identity = getattr(identity, 'id') or identity['id']
+    if hasattr(identity, 'id'):
+        identity = getattr(identity, 'id')
+    else:
+        identity = identity['id']
     return {'exp': exp, 'iat': iat, 'nbf': nbf, 'identity': identity}
 
 

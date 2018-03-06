@@ -3,6 +3,13 @@ Flask-JWT Changelog
 
 Here you can see the full list of changes between each Flask-JWT release.
 
+Version 0.3.3
+-------------
+
+Released March 7th 2018 (by AbdealiJK)
+
+- Fixed an error when finding attribute 'id'
+
 Version 0.3.2
 -------------
 
