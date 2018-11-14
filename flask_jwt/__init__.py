@@ -111,7 +111,13 @@ def _default_request_handler():
 
 
 def _default_auth_request_handler():
-    data = request.get_json()
+    data = dict()
+    
+    try:
+        data = request.get_json()
+    except:
+        raise JWTError('Bad Request', 'Request payload must be in json format.')
+    
     username = data.get(current_app.config.get('JWT_AUTH_USERNAME_KEY'), None)
     password = data.get(current_app.config.get('JWT_AUTH_PASSWORD_KEY'), None)
     criterion = [username, password, len(data) == 2]
