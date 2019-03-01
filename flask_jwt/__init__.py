@@ -173,7 +173,10 @@ def jwt_required(realm=None):
     def wrapper(fn):
         @wraps(fn)
         def decorator(*args, **kwargs):
-            _jwt_required(realm or current_app.config['JWT_DEFAULT_REALM'])
+            try:
+                _jwt_required(realm or current_app.config['JWT_DEFAULT_REALM'])
+            except JWTError as e:
+                return {"message": e.description}, e.status_code
             return fn(*args, **kwargs)
         return decorator
     return wrapper
