@@ -30,7 +30,7 @@ def identity(payload):
 
 app = Flask(__name__)
 app.debug = True
-app.config['SECRET_KEY'] = 'super-secret'
+app.config['JWT_SECRET_KEY'] = 'super-secret'
 
 jwt = JWT(app, authenticate, identity)
 
