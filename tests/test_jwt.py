@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 import jwt as _jwt
 import pytest
 
-from flask import Flask, json, jsonify
+from flask import Flask, json, jsonify, url_for
 
 import flask_jwt
 
@@ -44,9 +44,12 @@ def test_adds_auth_endpoint():
     app.config['SECRET_KEY'] = 'super-secret'
     app.config['JWT_AUTH_URL_RULE'] = '/auth'
     app.config['JWT_AUTH_ENDPOINT'] = 'jwt_auth'
+    app.config['SERVER_NAME'] = 'localhost'
     flask_jwt.JWT(app, lambda: None, lambda: None)
     rules = [str(r) for r in app.url_map._rules]
     assert '/auth' in rules
+    with app.app_context():
+        assert url_for('jwt_auth') == 'http://localhost/auth'
 
 
 def test_auth_endpoint_with_valid_request(client, user):
