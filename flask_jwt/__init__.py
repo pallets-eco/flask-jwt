@@ -230,6 +230,9 @@ class JWT(object):
 
             auth_url_options = app.config.get('JWT_AUTH_URL_OPTIONS', {'methods': ['POST']})
             auth_url_options.setdefault('view_func', self.auth_request_callback)
+            auth_endpoint = app.config.get('JWT_AUTH_ENDPOINT', None)
+            if auth_endpoint:
+                auth_url_options.setdefault('endpoint', auth_endpoint)
             app.add_url_rule(auth_url_rule, **auth_url_options)
 
         app.errorhandler(JWTError)(self._jwt_error_callback)
