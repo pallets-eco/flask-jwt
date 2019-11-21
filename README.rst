@@ -13,7 +13,7 @@ Flask-JWT
     :target: https://coveralls.io/r/mattupstate/flask-jwt
 
 .. image:: https://img.shields.io/pypi/dm/flask-jwt.svg
-    :target: https://pypi.python.org/pypi//Flask-JWT/
+    :target: https://pypi.python.org/pypi/Flask-JWT/
     :alt: Downloads
 
 .. image:: https://img.shields.io/pypi/l/flask-jwt.svg
