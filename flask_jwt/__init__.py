@@ -50,7 +50,11 @@ def _default_jwt_payload_handler(identity):
     iat = datetime.utcnow()
     exp = iat + current_app.config.get('JWT_EXPIRATION_DELTA')
     nbf = iat + current_app.config.get('JWT_NOT_BEFORE_DELTA')
-    identity = getattr(identity, 'id') or identity['id']
+    if type(identity) is dict:
+        identity = identity['id']
+    else:
+        identity = getattr(identity, 'id')
+        
     return {'exp': exp, 'iat': iat, 'nbf': nbf, 'identity': identity}
 
 
