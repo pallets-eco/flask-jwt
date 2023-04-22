@@ -129,7 +129,12 @@ def _default_auth_request_handler():
 
 
 def _default_auth_response_handler(access_token, identity):
-    return jsonify({'access_token': access_token.decode('utf-8')})
+    try:
+        token = access_token.decode('utf-8')
+    except AttributeError:
+        # There is no str.decode method in Python 3, so we can use the access token directly
+        token = access_token
+    return jsonify({'access_token': token})
 
 
 def _default_jwt_error_handler(error):
